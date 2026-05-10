@@ -12,6 +12,7 @@ import CartPage from "@/pages/cart";
 import CheckoutPage from "@/pages/checkout";
 import CollectionsPage from "@/pages/collections";
 import SearchPage from "@/pages/search";
+import PromosPage from "@/pages/promos";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/commande" component={CheckoutPage} />
       <Route path="/collections" component={CollectionsPage} />
       <Route path="/recherche" component={SearchPage} />
+      <Route path="/promotions" component={PromosPage} />
       <Route component={NotFound} />
     </Switch>
   );

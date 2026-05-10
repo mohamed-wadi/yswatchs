@@ -57,50 +57,50 @@
   --elevate-1: rgba(201, 168, 76, 0.04);
   --elevate-2: rgba(201, 168, 76, 0.08);
 
-  /* Light luxury theme — warm ivory/cream */
-  --background: 36 28% 97%;
-  --foreground: 28 18% 13%;
-  --border: 36 22% 86%;
-  --input: 36 22% 90%;
-  --ring: 43 53% 54%;
+  /* Premium ivory luxury theme */
+  --background: 36 25% 96%;
+  --foreground: 28 22% 10%;
+  --border: 36 18% 82%;
+  --input: 36 18% 88%;
+  --ring: 43 53% 48%;
 
   --card: 0 0% 100%;
-  --card-foreground: 28 18% 13%;
-  --card-border: 36 22% 88%;
+  --card-foreground: 28 22% 10%;
+  --card-border: 36 18% 84%;
 
-  --sidebar: 36 20% 95%;
-  --sidebar-foreground: 28 18% 13%;
-  --sidebar-border: 36 22% 86%;
-  --sidebar-primary: 43 53% 54%;
+  --sidebar: 36 18% 93%;
+  --sidebar-foreground: 28 22% 10%;
+  --sidebar-border: 36 18% 82%;
+  --sidebar-primary: 43 53% 48%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 36 20% 92%;
-  --sidebar-accent-foreground: 28 18% 13%;
-  --sidebar-ring: 43 53% 54%;
+  --sidebar-accent: 36 18% 90%;
+  --sidebar-accent-foreground: 28 22% 10%;
+  --sidebar-ring: 43 53% 48%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 28 18% 13%;
-  --popover-border: 36 22% 86%;
+  --popover-foreground: 28 22% 10%;
+  --popover-border: 36 18% 82%;
 
-  --primary: 43 53% 54%;
+  --primary: 43 53% 48%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 36 22% 92%;
-  --secondary-foreground: 28 18% 13%;
+  --secondary: 36 18% 90%;
+  --secondary-foreground: 28 22% 10%;
 
-  --muted: 36 22% 93%;
-  --muted-foreground: 28 10% 45%;
+  --muted: 36 18% 91%;
+  --muted-foreground: 28 12% 38%;
 
-  --accent: 43 53% 54%;
+  --accent: 43 53% 48%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
 
-  --chart-1: 43 53% 54%;
-  --chart-2: 36 33% 60%;
-  --chart-3: 28 15% 40%;
-  --chart-4: 43 40% 70%;
-  --chart-5: 28 10% 75%;
+  --chart-1: 43 53% 48%;
+  --chart-2: 36 33% 55%;
+  --chart-3: 28 15% 35%;
+  --chart-4: 43 40% 65%;
+  --chart-5: 28 10% 70%;
 
   --app-font-sans: 'Jost', sans-serif;
   --app-font-serif: 'Cormorant Garamond', serif;
@@ -141,7 +141,7 @@
 
 /* Gold gradient text */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #a8781e 0%, #d4a843 40%, #c9a84c 60%, #e8c96e 100%);
+  background: linear-gradient(135deg, #8a6010 0%, #c9922a 35%, #c9a84c 60%, #d4b55a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -181,19 +181,19 @@
   transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
 }
 .product-card-hover:hover {
-  border-color: rgba(201, 168, 76, 0.45);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(201,168,76,0.15);
+  border-color: rgba(201, 168, 76, 0.5);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(201,168,76,0.18);
   transform: translateY(-4px);
 }
 
-/* Noise grain overlay — subtle on light bg */
+/* Noise grain overlay */
 .noise-overlay {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.018;
+  opacity: 0.015;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
 }
@@ -210,6 +210,27 @@
 }
 .zoom-container.zoomed img {
   transform: scale(2.2);
+}
+
+/* Promo badge pulse */
+@keyframes pulseBadge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+.promo-badge {
+  animation: pulseBadge 2.5s ease-in-out infinite;
+}
+
+/* Hero animated gradient */
+@keyframes heroShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.hero-animated-bg {
+  background: linear-gradient(135deg, #f5f0e8 0%, #faf8f3 25%, #ede5d8 50%, #f5f0e8 75%, #fdf9f4 100%);
+  background-size: 300% 300%;
+  animation: heroShift 12s ease infinite;
 }
 
 @layer utilities {

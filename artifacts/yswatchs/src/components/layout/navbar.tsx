@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiShoppingCart, FiSearch, FiMenu, FiX } from "react-icons/fi";
+import { FiShoppingCart, FiSearch, FiMenu, FiX, FiTag } from "react-icons/fi";
 import { useCart } from "@/hooks/use-cart";
 import logoPath from "@assets/LOGO_YS_1778428531681.png";
 
@@ -21,6 +21,7 @@ export default function Navbar() {
     { label: "Homme", href: "/montres/homme" },
     { label: "Femme", href: "/montres/femme" },
     { label: "Collections", href: "/collections" },
+    { label: "Promotions", href: "/promotions", highlight: true },
   ];
 
   return (
@@ -28,7 +29,7 @@ export default function Navbar() {
       <header
         className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ease-out ${
           isScrolled
-            ? "bg-white/90 backdrop-blur-md border-b border-[#c9a84c]/20 py-3 shadow-[0_2px_30px_rgba(0,0,0,0.06)]"
+            ? "bg-white/95 backdrop-blur-md border-b border-[#c9a84c]/20 py-3 shadow-[0_2px_30px_rgba(0,0,0,0.08)]"
             : "bg-transparent py-4 md:py-5"
         }`}
       >
@@ -37,23 +38,28 @@ export default function Navbar() {
           {/* Left: desktop nav | mobile hamburger */}
           <div className="flex items-center w-1/3">
             <button
-              data-testid="button-mobile-menu"
               onClick={() => setIsMobileMenuOpen(true)}
               className="text-foreground hover:text-primary transition-colors lg:hidden"
               aria-label="Menu"
             >
               <FiMenu className="text-2xl" />
             </button>
-            <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
+            <nav className="hidden lg:flex items-center gap-7 xl:gap-9">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  data-testid={`link-nav-${link.label.toLowerCase()}`}
                   className={`text-xs tracking-[0.25em] uppercase font-medium transition-all hover:text-primary relative group ${
-                    location.startsWith(link.href) ? "text-primary" : "text-foreground/60"
+                    location.startsWith(link.href)
+                      ? "text-primary"
+                      : link.highlight
+                      ? "text-[#c9a84c]"
+                      : "text-foreground/60"
                   }`}
                 >
+                  {link.highlight && (
+                    <FiTag className="inline mr-1 text-[10px] -mt-0.5" />
+                  )}
                   {link.label}
                   <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-primary transition-all duration-300 group-hover:w-full" />
                 </Link>
@@ -61,15 +67,15 @@ export default function Navbar() {
             </nav>
           </div>
 
-          {/* Center: logo — absolutely centered on all screen sizes */}
+          {/* Center: logo — absolutely centered */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
-            <Link href="/" data-testid="link-logo" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <img
                 src={logoPath}
                 alt="YsWatchs"
                 className="h-9 sm:h-10 lg:h-12 w-auto object-contain hover:scale-105 transition-all duration-500"
                 style={{
-                  filter: 'brightness(0.2) sepia(0.4) saturate(3) hue-rotate(5deg)',
+                  filter: 'brightness(0.15) sepia(0.3) saturate(4) hue-rotate(5deg)',
                 }}
               />
             </Link>
@@ -79,7 +85,6 @@ export default function Navbar() {
           <div className="flex items-center justify-end gap-5 w-1/3">
             <Link
               href="/recherche"
-              data-testid="link-search"
               className="text-foreground/60 hover:text-primary transition-colors"
               aria-label="Recherche"
             >
@@ -87,7 +92,6 @@ export default function Navbar() {
             </Link>
             <Link
               href="/panier"
-              data-testid="link-cart"
               className="text-foreground/60 hover:text-primary transition-colors relative"
               aria-label="Panier"
             >
@@ -98,7 +102,6 @@ export default function Navbar() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    data-testid="badge-cart-count"
                     className="absolute -top-2 -right-2 bg-primary text-white text-[9px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center"
                   >
                     {totalItems}
@@ -125,10 +128,9 @@ export default function Navbar() {
                 src={logoPath}
                 alt="YsWatchs"
                 className="h-9 w-auto object-contain"
-                style={{ filter: 'brightness(0.2) sepia(0.4) saturate(3) hue-rotate(5deg)' }}
+                style={{ filter: 'brightness(0.15) sepia(0.3) saturate(4) hue-rotate(5deg)' }}
               />
               <button
-                data-testid="button-close-mobile-menu"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-foreground/60 hover:text-primary transition-colors"
               >
@@ -148,7 +150,11 @@ export default function Navbar() {
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`block font-serif text-5xl sm:text-6xl font-light py-3 border-b border-[#c9a84c]/15 hover:text-primary transition-colors ${
-                      location.startsWith(link.href) ? "text-primary" : "text-foreground"
+                      location.startsWith(link.href)
+                        ? "text-primary"
+                        : link.highlight
+                        ? "text-[#c9a84c]"
+                        : "text-foreground"
                     }`}
                   >
                     {link.label}
@@ -158,7 +164,7 @@ export default function Navbar() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 }}
+                transition={{ delay: 0.38 }}
               >
                 <Link
                   href="/recherche"
@@ -171,7 +177,7 @@ export default function Navbar() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.42 }}
+                transition={{ delay: 0.45 }}
               >
                 <Link
                   href="/panier"
@@ -187,7 +193,7 @@ export default function Navbar() {
             </div>
 
             <div className="px-8 pb-10 text-[10px] tracking-[0.4em] uppercase text-foreground/30">
-              L'Art du Temps
+              L'Art du Temps · Maroc
             </div>
           </motion.div>
         )}
