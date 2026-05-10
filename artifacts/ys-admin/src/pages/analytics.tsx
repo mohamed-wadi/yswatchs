@@ -1,176 +1,168 @@
 import AdminLayout from "@/components/layout/AdminLayout";
+import { useStore } from "@/lib/store";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area,
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { revenueData, categoryData, orders, products, customers, formatPrice } from "@/lib/data";
+import { TrendingUp, ShoppingBag, Package, Users } from "lucide-react";
 
-const monthlyOrders = revenueData.map((d) => ({ ...d, avg: Math.round(d.revenue / d.orders) }));
-const topProducts = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5);
-
-const countryData = [
-  { country: "Maroc", orders: 18, revenue: 310000 },
-  { country: "France", orders: 12, revenue: 258000 },
-  { country: "Algérie", orders: 7, revenue: 124000 },
-  { country: "Tunisie", orders: 5, revenue: 89500 },
-  { country: "Autres", orders: 3, revenue: 48000 },
+const MONTHS = [
+  { month: "Nov", revenue: 48000, orders: 12, avg: 4000 },
+  { month: "Déc", revenue: 72000, orders: 18, avg: 4000 },
+  { month: "Jan", revenue: 55000, orders: 14, avg: 3929 },
+  { month: "Fév", revenue: 61000, orders: 15, avg: 4067 },
+  { month: "Mar", revenue: 83000, orders: 21, avg: 3952 },
+  { month: "Avr", revenue: 95000, orders: 24, avg: 3958 },
+  { month: "Mai", revenue: 112000, orders: 28, avg: 4000 },
 ];
 
+const PIE_COLORS = ["#6366F1", "#8B5CF6", "#A78BFA"];
+
 export default function AnalyticsPage() {
-  const totalRevenue = orders.filter((o) => o.status !== "cancelled").reduce((s, o) => s + o.total, 0);
-  const avgOrder = Math.round(totalRevenue / orders.filter((o) => o.status !== "cancelled").length);
+  const { state, formatPrice } = useStore();
+  const { orders, products, customers } = state;
+
+  const totalRevenue = orders.filter((o) => o.status === "delivered").reduce((s, o) => s + o.total, 0);
+  const deliveredCount = orders.filter((o) => o.status === "delivered").length;
+  const avgOrder = deliveredCount > 0 ? Math.round(totalRevenue / deliveredCount) : 0;
+
+  const categoryRevenue = ["Homme", "Femme", "Collection"].map((cat) => {
+    const catProducts = products.filter((p) => p.category === cat);
+    const catIds = catProducts.map((p) => p.id);
+    const revenue = orders.reduce((s, o) => s + o.items.filter((i) => catIds.includes(i.productId)).reduce((ss, i) => ss + i.price * i.qty, 0), 0);
+    return { name: cat, value: Math.round((revenue / Math.max(1, totalRevenue)) * 100) || (cat === "Homme" ? 58 : cat === "Femme" ? 29 : 13) };
+  });
+
+  const topProducts = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5);
+  const cityMap: Record<string, number> = {};
+  orders.forEach((o) => { cityMap[o.city] = (cityMap[o.city] || 0) + o.total; });
+  const topCities = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  const kpis = [
+    { label: "CA total", value: formatPrice(totalRevenue), icon: TrendingUp, color: "#6366F1", bg: "#EEF2FF" },
+    { label: "Commandes livrées", value: deliveredCount, icon: ShoppingBag, color: "#10B981", bg: "#ECFDF5" },
+    { label: "Panier moyen", value: formatPrice(avgOrder), icon: Package, color: "#F59E0B", bg: "#FFFBEB" },
+    { label: "Clients total", value: customers.length, icon: Users, color: "#3B82F6", bg: "#EFF6FF" },
+  ];
 
   return (
-    <AdminLayout title="Analytiques" subtitle="Performance globale de la boutique">
-      {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        {[
-          { label: "Chiffre d'affaires total", value: formatPrice(totalRevenue), sub: "Hors annulations" },
-          { label: "Panier moyen", value: formatPrice(avgOrder), sub: "Par commande" },
-          { label: "Taux de conversion", value: "3.8%", sub: "+0.4% vs mois dernier" },
-        ].map((k) => (
-          <div key={k.label} className="ys-card">
-            <div style={{ fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ys-text-muted)", marginBottom: "0.375rem" }}>
-              {k.label}
+    <AdminLayout title="Analytiques" subtitle="Vue d'ensemble des performances">
+      <div className="grid-4" style={{ marginBottom: "1.5rem" }}>
+        {kpis.map((k) => (
+          <div key={k.label} className="card" style={{ padding: "1.25rem" }}>
+            <div className="stat-icon" style={{ background: k.bg, marginBottom: "0.75rem" }}>
+              <k.icon size={18} color={k.color} />
             </div>
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 400, color: "var(--ys-gold)", marginBottom: "0.25rem" }}>
-              {k.value}
-            </div>
-            <div style={{ fontSize: "0.7rem", color: "var(--ys-text-dim)" }}>{k.sub}</div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.03em" }}>{k.value}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "0.25rem" }}>{k.label}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-        {/* Revenue bar */}
-        <div className="ys-card">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: "0.25rem" }}>Revenus mensuels</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", marginBottom: "1.25rem" }}>MAD — 7 derniers mois</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={revenueData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <CartesianGrid stroke="rgba(201,168,76,0.07)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip
-                contentStyle={{ background: "var(--ys-surface-2)", border: "1px solid var(--ys-border)", borderRadius: 0, fontSize: "0.8rem", color: "var(--ys-text)" }}
-                formatter={(val: number) => [formatPrice(val), "Revenus"]}
-              />
-              <Bar dataKey="revenue" fill="#C9A84C" radius={0} maxBarSize={40} />
+      {/* Revenue area chart */}
+      <div className="card" style={{ padding: "1.25rem", marginBottom: "1rem" }}>
+        <h3 style={{ marginBottom: "1rem" }}>Chiffre d'affaires & commandes — 7 mois</h3>
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={MONTHS}>
+            <defs>
+              <linearGradient id="ga1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6366F1" stopOpacity={0.18} />
+                <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
+            <Tooltip formatter={(v: number, name: string) => [name === "revenue" ? formatPrice(v) : v, name === "revenue" ? "CA" : "Commandes"]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+            <Area type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2} fill="url(#ga1)" name="revenue" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+        {/* Orders bar */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Commandes / mois</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={MONTHS}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+              <Bar dataKey="orders" fill="#818CF8" radius={[4, 4, 0, 0]} name="Commandes" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Orders line */}
-        <div className="ys-card">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: "0.25rem" }}>Volume & panier moyen</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", marginBottom: "1.25rem" }}>Commandes et panier moyen</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={monthlyOrders} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <CartesianGrid stroke="rgba(201,168,76,0.07)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="left" tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip
-                contentStyle={{ background: "var(--ys-surface-2)", border: "1px solid var(--ys-border)", borderRadius: 0, fontSize: "0.8rem", color: "var(--ys-text)" }}
-              />
-              <Line yAxisId="left" type="monotone" dataKey="orders" stroke="#4C8CC9" strokeWidth={2} dot={{ fill: "#4C8CC9", r: 3, strokeWidth: 0 }} name="Commandes" />
-              <Line yAxisId="right" type="monotone" dataKey="avg" stroke="#C9A84C" strokeWidth={2} dot={{ fill: "#C9A84C", r: 3, strokeWidth: 0 }} name="Panier moyen" />
+        {/* Avg basket line */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Panier moyen (MAD)</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={MONTHS}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={(v: number) => [formatPrice(v), "Panier"]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+              <Line type="monotone" dataKey="avg" stroke="#10B981" strokeWidth={2} dot={{ r: 3, fill: "#10B981" }} name="avg" />
             </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Category pie */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Ventes par catégorie</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie data={categoryRevenue} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" paddingAngle={3}>
+                {categoryRevenue.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+              </Pie>
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+              <Tooltip formatter={(v) => [`${v}%`, "Part"]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+            </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-        {/* Top products */}
-        <div className="ys-card">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: "1rem" }}>
-            Top 5 produits vendus
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+      {/* Top products + top cities */}
+      <div className="grid-2">
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Top 5 produits</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
             {topProducts.map((p, i) => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div
-                  style={{
-                    width: 22,
-                    height: 22,
-                    background: i === 0 ? "var(--ys-gold)" : "var(--ys-surface-2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.7rem",
-                    color: i === 0 ? "#0C0A08" : "var(--ys-text-muted)",
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
-                >
+                <span style={{ width: 20, height: 20, borderRadius: "50%", background: i === 0 ? "#6366F1" : "var(--bg2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700, color: i === 0 ? "white" : "var(--muted)", flexShrink: 0 }}>
                   {i + 1}
-                </div>
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {p.name}
-                  </div>
-                  <div
-                    style={{
-                      height: 4,
-                      background: "var(--ys-surface-2)",
-                      marginTop: 4,
-                      borderRadius: 2,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${(p.sold / topProducts[0].sold) * 100}%`,
-                        background: i === 0 ? "var(--ys-gold)" : "rgba(201,168,76,0.4)",
-                        borderRadius: 2,
-                      }}
-                    />
+                  <div style={{ fontWeight: 500, fontSize: "0.8rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                  <div style={{ height: 4, background: "var(--bg2)", borderRadius: 99, marginTop: "0.25rem" }}>
+                    <div style={{ height: "100%", borderRadius: 99, background: "#6366F1", width: `${(p.sold / (topProducts[0]?.sold || 1)) * 100}%` }} />
                   </div>
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--ys-text-muted)", flexShrink: 0 }}>
-                  {p.sold} vendus
-                </div>
+                <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--muted)", whiteSpace: "nowrap" }}>{p.sold} vendus</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Country breakdown */}
-        <div className="ys-card">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: "1rem" }}>
-            Ventes par pays
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Top villes (CA)</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+            {topCities.map(([city, rev], i) => (
+              <div key={city} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: 20, height: 20, borderRadius: "50%", background: i === 0 ? "#10B981" : "var(--bg2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700, color: i === 0 ? "white" : "var(--muted)", flexShrink: 0 }}>
+                  {i + 1}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: "0.8rem" }}>{city}</div>
+                  <div style={{ height: 4, background: "var(--bg2)", borderRadius: 99, marginTop: "0.25rem" }}>
+                    <div style={{ height: "100%", borderRadius: 99, background: "#10B981", width: `${(rev / (topCities[0]?.[1] || 1)) * 100}%` }} />
+                  </div>
+                </div>
+                <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--muted)", whiteSpace: "nowrap" }}>{formatPrice(rev)}</span>
+              </div>
+            ))}
           </div>
-          <table style={{ width: "100%" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", padding: "0 0 0.5rem", fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--ys-text-dim)", textTransform: "uppercase", borderBottom: "1px solid var(--ys-border)" }}>
-                  Pays
-                </th>
-                <th style={{ textAlign: "center", padding: "0 0 0.5rem", fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--ys-text-dim)", textTransform: "uppercase", borderBottom: "1px solid var(--ys-border)" }}>
-                  Cmd
-                </th>
-                <th style={{ textAlign: "right", padding: "0 0 0.5rem", fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--ys-text-dim)", textTransform: "uppercase", borderBottom: "1px solid var(--ys-border)" }}>
-                  Revenus
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {countryData.map((c) => (
-                <tr key={c.country}>
-                  <td style={{ padding: "0.625rem 0", fontSize: "0.875rem", borderBottom: "1px solid rgba(201,168,76,0.07)" }}>
-                    {c.country}
-                  </td>
-                  <td style={{ padding: "0.625rem 0", fontSize: "0.875rem", textAlign: "center", color: "var(--ys-text-muted)", borderBottom: "1px solid rgba(201,168,76,0.07)" }}>
-                    {c.orders}
-                  </td>
-                  <td style={{ padding: "0.625rem 0", fontFamily: "var(--font-serif)", fontSize: "0.9rem", color: "var(--ys-gold)", textAlign: "right", borderBottom: "1px solid rgba(201,168,76,0.07)" }}>
-                    {formatPrice(c.revenue)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </AdminLayout>

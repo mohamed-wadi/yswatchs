@@ -1,209 +1,128 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Plus, Trash2, Tag, Calendar, Percent } from "lucide-react";
-import { formatDate } from "@/lib/data";
+import { Plus, Trash2, Tag, Percent, X, Copy } from "lucide-react";
 
 interface Promo {
-  id: string;
-  code: string;
-  type: "percent" | "fixed";
-  value: number;
-  minOrder?: number;
-  uses: number;
-  maxUses: number;
-  active: boolean;
-  startDate: string;
-  endDate: string;
-  description: string;
+  id: string; code: string; type: "percent" | "fixed";
+  value: number; minOrder?: number; expiresAt?: string;
+  active: boolean; used: number;
 }
 
-const initialPromos: Promo[] = [
-  { id: "p1", code: "YSVIP20", type: "percent", value: 20, minOrder: 15000, uses: 14, maxUses: 50, active: true, startDate: "2025-04-01", endDate: "2025-06-30", description: "Remise VIP 20%" },
-  { id: "p2", code: "BIENVENUE", type: "percent", value: 10, uses: 31, maxUses: 100, active: true, startDate: "2025-01-01", endDate: "2025-12-31", description: "Code de bienvenue" },
-  { id: "p3", code: "ETE2025", type: "fixed", value: 2000, minOrder: 20000, uses: 5, maxUses: 30, active: false, startDate: "2025-06-01", endDate: "2025-08-31", description: "Promo estivale" },
-  { id: "p4", code: "RAMADAN", type: "percent", value: 15, uses: 28, maxUses: 28, active: false, startDate: "2025-02-28", endDate: "2025-03-30", description: "Offre Ramadan (expirée)" },
+const INITIAL: Promo[] = [
+  { id: "pr1", code: "BIENVENUE10", type: "percent", value: 10, minOrder: 10000, expiresAt: "2025-12-31", active: true, used: 34 },
+  { id: "pr2", code: "VIP500",      type: "fixed",   value: 500, minOrder: 20000, active: true, used: 12 },
+  { id: "pr3", code: "SOLDES15",    type: "percent", value: 15, expiresAt: "2025-06-30", active: false, used: 8 },
 ];
 
 export default function PromosPage() {
-  const [promos, setPromos] = useState(initialPromos);
+  const [promos, setPromos] = useState<Promo[]>(INITIAL);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<Partial<Promo>>({ type: "percent", active: true, maxUses: 50, uses: 0 });
+  const [copied, setCopied] = useState<string | null>(null);
+  const [form, setForm] = useState<Omit<Promo, "id" | "used">>({
+    code: "", type: "percent", value: 0, active: true,
+  });
 
-  const toggle = (id: string) => {
-    setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
-  };
+  const toggle = (id: string) => setPromos((p) => p.map((pr) => pr.id === id ? { ...pr, active: !pr.active } : pr));
+  const remove = (id: string) => setPromos((p) => p.filter((pr) => pr.id !== id));
+  const copyCode = (code: string) => { navigator.clipboard.writeText(code); setCopied(code); setTimeout(() => setCopied(null), 1500); };
 
-  const remove = (id: string) => {
-    if (confirm("Supprimer ce code promo ?")) setPromos((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const save = () => {
-    if (!form.code || !form.value || !form.startDate || !form.endDate) return;
-    const newPromo: Promo = {
-      id: `p${Date.now()}`,
-      code: form.code!.toUpperCase(),
-      type: form.type || "percent",
-      value: Number(form.value),
-      minOrder: form.minOrder ? Number(form.minOrder) : undefined,
-      uses: 0,
-      maxUses: Number(form.maxUses) || 50,
-      active: true,
-      startDate: form.startDate!,
-      endDate: form.endDate!,
-      description: form.description || "",
-    };
-    setPromos((prev) => [newPromo, ...prev]);
+  const create = () => {
+    if (!form.code.trim() || !form.value) return;
+    setPromos((p) => [...p, { ...form, id: `pr${Date.now()}`, code: form.code.toUpperCase(), used: 0 }]);
     setShowForm(false);
-    setForm({ type: "percent", active: true, maxUses: 50, uses: 0 });
+    setForm({ code: "", type: "percent", value: 0, active: true });
   };
 
   return (
-    <AdminLayout title="Promotions" subtitle="Codes promo et remises">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1.25rem" }}>
-        <button className="ys-btn ys-btn-primary" onClick={() => setShowForm(true)}>
-          <Plus size={14} /> Créer un code promo
+    <AdminLayout title="Promotions" subtitle={`${promos.filter((p) => p.active).length} codes actifs`}>
+      <div className="page-header">
+        <div />
+        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+          <Plus size={14} /> Nouveau code promo
         </button>
       </div>
 
-      {showForm && (
-        <div className="ys-card animate-in" style={{ marginBottom: "1.25rem" }}>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", marginBottom: "1.25rem" }}>
-            Nouveau code promotionnel
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.875rem", marginBottom: "0.875rem" }}>
-            <Field label="Code *">
-              <input
-                style={{ width: "100%", textTransform: "uppercase" }}
-                value={form.code || ""}
-                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
-                placeholder="EXAMPLE20"
-              />
-            </Field>
-            <Field label="Type de remise">
-              <select style={{ width: "100%" }} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as "percent" | "fixed" }))}>
-                <option value="percent">Pourcentage (%)</option>
-                <option value="fixed">Montant fixe (MAD)</option>
-              </select>
-            </Field>
-            <Field label={form.type === "percent" ? "Valeur (%) *" : "Valeur (MAD) *"}>
-              <input type="number" style={{ width: "100%" }} value={form.value || ""} onChange={(e) => setForm((f) => ({ ...f, value: Number(e.target.value) }))} />
-            </Field>
-            <Field label="Commande min. (MAD)">
-              <input type="number" style={{ width: "100%" }} value={form.minOrder || ""} onChange={(e) => setForm((f) => ({ ...f, minOrder: Number(e.target.value) || undefined }))} placeholder="Aucun minimum" />
-            </Field>
-            <Field label="Utilisations max.">
-              <input type="number" style={{ width: "100%" }} value={form.maxUses || ""} onChange={(e) => setForm((f) => ({ ...f, maxUses: Number(e.target.value) }))} />
-            </Field>
-            <Field label="Description">
-              <input style={{ width: "100%" }} value={form.description || ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Description courte" />
-            </Field>
-            <Field label="Date de début *">
-              <input type="date" style={{ width: "100%" }} value={form.startDate || ""} onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} />
-            </Field>
-            <Field label="Date de fin *">
-              <input type="date" style={{ width: "100%" }} value={form.endDate || ""} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
-            </Field>
-          </div>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
-            <button className="ys-btn ys-btn-primary" onClick={save}>Créer le code</button>
-            <button className="ys-btn ys-btn-ghost" onClick={() => setShowForm(false)}>Annuler</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
-        {promos.map((p) => (
-          <div
-            key={p.id}
-            className="ys-card"
-            style={{
-              borderColor: p.active ? "var(--ys-border)" : "rgba(201,168,76,0.07)",
-              opacity: p.active ? 1 : 0.6,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.875rem" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                  <Tag size={14} style={{ color: "var(--ys-gold)" }} />
-                  <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", color: "var(--ys-gold)", letterSpacing: "0.08em" }}>
-                    {p.code}
-                  </span>
+      <div className="grid-2">
+        {promos.map((pr) => (
+          <div key={pr.id} className="card" style={{ padding: "1.25rem", opacity: pr.active ? 1 : 0.6 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.875rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "var(--radius-sm)", background: pr.active ? "var(--accent-light)" : "var(--bg2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {pr.type === "percent" ? <Percent size={16} color={pr.active ? "var(--accent)" : "var(--muted)"} /> : <Tag size={16} color={pr.active ? "var(--accent)" : "var(--muted)"} />}
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--ys-text-muted)" }}>{p.description}</div>
+                <div>
+                  <div style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.05em" }}>{pr.code}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+                    {pr.type === "percent" ? `−${pr.value}%` : `−${pr.value} MAD`}
+                    {pr.minOrder && ` · min ${pr.minOrder.toLocaleString("fr-MA")} MAD`}
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                <button
-                  onClick={() => toggle(p.id)}
-                  style={{
-                    padding: "0.25rem 0.625rem",
-                    fontSize: "0.65rem",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    cursor: "pointer",
-                    border: "1px solid",
-                    borderColor: p.active ? "rgba(76,175,124,0.4)" : "var(--ys-border)",
-                    background: p.active ? "rgba(76,175,124,0.1)" : "transparent",
-                    color: p.active ? "var(--ys-success)" : "var(--ys-text-muted)",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {p.active ? "Actif" : "Inactif"}
+              <div style={{ display: "flex", gap: "0.25rem" }}>
+                <button className="btn-icon" title="Copier" onClick={() => copyCode(pr.code)}>
+                  {copied === pr.code ? <span style={{ fontSize: "0.7rem", color: "var(--success)" }}>✓</span> : <Copy size={13} />}
                 </button>
-                <button
-                  onClick={() => remove(p.id)}
-                  style={{ background: "transparent", border: "none", color: "var(--ys-danger)", cursor: "pointer", padding: 4 }}
-                >
-                  <Trash2 size={14} />
-                </button>
+                <button className="btn-icon" style={{ color: "var(--danger)" }} onClick={() => remove(pr.id)}><Trash2 size={13} /></button>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "0.875rem" }}>
-              <div style={{ background: "var(--ys-surface-2)", padding: "0.5rem 0.625rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.65rem", color: "var(--ys-text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>
-                  <Percent size={9} /> Remise
-                </div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", color: "var(--ys-gold)" }}>
-                  {p.type === "percent" ? `${p.value}%` : `${p.value} MAD`}
-                </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", gap: "1rem", fontSize: "0.8rem", color: "var(--muted)" }}>
+                <span>{pr.used} utilisations</span>
+                {pr.expiresAt && <span>Expire {new Date(pr.expiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
               </div>
-              <div style={{ background: "var(--ys-surface-2)", padding: "0.5rem 0.625rem" }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--ys-text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>
-                  Utilisations
-                </div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem" }}>
-                  {p.uses}<span style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)" }}>/{p.maxUses}</span>
-                </div>
-              </div>
-              <div style={{ background: "var(--ys-surface-2)", padding: "0.5rem 0.625rem" }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--ys-text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>
-                  Remplissage
-                </div>
-                <div style={{ height: 6, background: "var(--ys-bg)", marginTop: 8, borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${(p.uses / p.maxUses) * 100}%`, background: p.uses >= p.maxUses ? "var(--ys-danger)" : "var(--ys-gold)", borderRadius: 3 }} />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.7rem", color: "var(--ys-text-dim)" }}>
-              <Calendar size={11} />
-              {formatDate(p.startDate)} → {formatDate(p.endDate)}
-              {p.minOrder && <span style={{ marginLeft: "0.5rem" }}>· Min. {p.minOrder.toLocaleString()} MAD</span>}
+              <button className={`toggle ${pr.active ? "on" : ""}`} onClick={() => toggle(pr.id)} />
             </div>
           </div>
         ))}
       </div>
-    </AdminLayout>
-  );
-}
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: "block", fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ys-text-muted)", marginBottom: "0.3rem" }}>
-        {label}
-      </label>
-      {children}
-    </div>
+      {/* Create modal */}
+      {showForm && (
+        <div className="overlay" onClick={() => setShowForm(false)}>
+          <div className="modal" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border)" }}>
+              <h3>Nouveau code promo</h3>
+              <button className="btn-icon" onClick={() => setShowForm(false)}><X size={16} /></button>
+            </div>
+            <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="form-group">
+                <label className="form-label">Code *</label>
+                <input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="PROMO20" style={{ fontFamily: "monospace", letterSpacing: "0.05em" }} />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Type</label>
+                  <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as "percent" | "fixed" }))}>
+                    <option value="percent">Pourcentage (%)</option>
+                    <option value="fixed">Montant fixe (MAD)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Valeur *</label>
+                  <input type="number" value={form.value || ""} min={1} onChange={(e) => setForm((f) => ({ ...f, value: Number(e.target.value) }))} placeholder={form.type === "percent" ? "10" : "500"} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Commande minimum (MAD)</label>
+                  <input type="number" value={form.minOrder || ""} min={0} onChange={(e) => setForm((f) => ({ ...f, minOrder: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Optionnel" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Date d'expiration</label>
+                  <input type="date" value={form.expiresAt || ""} onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value || undefined }))} />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
+                <button className="btn btn-secondary" onClick={() => setShowForm(false)}>Annuler</button>
+                <button className="btn btn-primary" disabled={!form.code.trim() || !form.value} onClick={create}>
+                  <Plus size={14} /> Créer le code
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
   );
 }

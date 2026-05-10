@@ -1,152 +1,122 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { products as initialProducts, formatPrice, Product } from "@/lib/data";
-import { AlertTriangle, TrendingDown, Package, RefreshCw } from "lucide-react";
+import { useStore } from "@/lib/store";
+import { Package, AlertTriangle, Plus, Minus, CheckCircle2 } from "lucide-react";
 
 export default function InventoryPage() {
-  const [products, setProducts] = useState(initialProducts);
+  const { state, dispatch, formatPrice } = useStore();
   const [adjustId, setAdjustId] = useState<string | null>(null);
   const [adjustQty, setAdjustQty] = useState("");
 
-  const applyAdjust = (id: string) => {
-    const delta = parseInt(adjustQty, 10);
-    if (isNaN(delta)) return;
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const newStock = Math.max(0, p.stock + delta);
-        const stockStatus: Product["stockStatus"] =
-          newStock === 0 ? "outofstock" : newStock <= 5 ? "lowstock" : "instock";
-        return { ...p, stock: newStock, stockStatus };
-      })
-    );
+  const products = state.products;
+  const outOfStock = products.filter((p) => p.stock === 0);
+  const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5);
+  const good = products.filter((p) => p.stock > 5);
+
+  const applyAdjust = (id: string, delta: number) => {
+    dispatch({ type: "ADJUST_STOCK", id, delta });
     setAdjustId(null);
     setAdjustQty("");
   };
 
-  const totalValue = products.reduce((s, p) => s + p.price * p.stock, 0);
-  const outOfStock = products.filter((p) => p.stockStatus === "outofstock").length;
-  const lowStock = products.filter((p) => p.stockStatus === "lowstock").length;
-  const totalUnits = products.reduce((s, p) => s + p.stock, 0);
+  const stockBg = (stock: number) => {
+    if (stock === 0) return "var(--danger-bg)";
+    if (stock <= 5) return "var(--warning-bg)";
+    return "var(--success-bg)";
+  };
+
+  const stockColor = (stock: number) => {
+    if (stock === 0) return "var(--danger-text)";
+    if (stock <= 5) return "var(--warning-text)";
+    return "var(--success-text)";
+  };
 
   return (
-    <AdminLayout title="Inventaire" subtitle="Gestion des stocks en temps réel">
-      {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        {[
-          { label: "Valeur totale stock", value: formatPrice(totalValue), icon: Package, color: "var(--ys-gold)" },
-          { label: "Unités en stock", value: totalUnits, icon: Package, color: "var(--ys-info)" },
-          { label: "Stock faible", value: lowStock, icon: TrendingDown, color: "var(--ys-warning)" },
-          { label: "Épuisés", value: outOfStock, icon: AlertTriangle, color: "var(--ys-danger)" },
-        ].map((k) => (
-          <div key={k.label} className="ys-card" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <k.icon size={20} style={{ color: k.color, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ys-text-muted)", marginBottom: 4 }}>
-                {k.label}
-              </div>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 400, color: "var(--ys-text)" }}>
-                {k.value}
-              </div>
-            </div>
+    <AdminLayout title="Inventaire" subtitle={`${products.length} produits — ${outOfStock.length} épuisés, ${lowStock.length} en stock faible`}>
+      {/* Summary cards */}
+      <div className="grid-3" style={{ marginBottom: "1.5rem" }}>
+        <div className="card" style={{ padding: "1.25rem", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div className="stat-icon" style={{ background: "var(--danger-bg)" }}><Package size={18} color="var(--danger)" /></div>
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{outOfStock.length}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 500 }}>Épuisés</div>
           </div>
-        ))}
+        </div>
+        <div className="card" style={{ padding: "1.25rem", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div className="stat-icon" style={{ background: "var(--warning-bg)" }}><AlertTriangle size={18} color="var(--warning)" /></div>
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{lowStock.length}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 500 }}>Stock faible (≤ 5)</div>
+          </div>
+        </div>
+        <div className="card" style={{ padding: "1.25rem", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div className="stat-icon" style={{ background: "var(--success-bg)" }}><CheckCircle2 size={18} color="var(--success)" /></div>
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{good.length}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 500 }}>En stock OK</div>
+          </div>
+        </div>
       </div>
 
-      <div className="ys-card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--ys-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "1rem" }}>Stock par produit</span>
-          <span style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", letterSpacing: "0.08em" }}>{products.length} produits</span>
-        </div>
+      <div className="card table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Référence</th>
-              <th>Produit</th>
-              <th>Catégorie</th>
-              <th>Prix unitaire</th>
-              <th>Stock actuel</th>
-              <th>Valeur stock</th>
-              <th>Statut</th>
-              <th>Ajustement</th>
+              <th>Produit</th><th>Référence</th><th>Catégorie</th><th>Prix</th>
+              <th>Vendu</th><th>Stock actuel</th><th>Niveau</th><th>Ajuster</th>
             </tr>
           </thead>
           <tbody>
             {products.map((p) => (
               <tr key={p.id}>
-                <td style={{ color: "var(--ys-gold)", fontFamily: "var(--font-serif)", fontSize: "0.85rem" }}>
-                  {p.reference}
-                </td>
                 <td>
-                  <div style={{ fontWeight: 500, fontSize: "0.875rem" }}>{p.name}</div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)" }}>{p.movement}</div>
-                </td>
-                <td style={{ color: "var(--ys-text-muted)", fontSize: "0.8rem" }}>{p.category}</td>
-                <td style={{ fontFamily: "var(--font-serif)", fontSize: "0.9rem" }}>{formatPrice(p.price)}</td>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <div
-                      style={{
-                        width: 80,
-                        height: 6,
-                        background: "var(--ys-surface-2)",
-                        borderRadius: 3,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${Math.min(100, (p.stock / 20) * 100)}%`,
-                          background:
-                            p.stockStatus === "outofstock"
-                              ? "var(--ys-danger)"
-                              : p.stockStatus === "lowstock"
-                              ? "var(--ys-warning)"
-                              : "var(--ys-success)",
-                          borderRadius: 3,
-                        }}
-                      />
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div style={{ width: 32, height: 32, background: stockBg(p.stock), borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Package size={14} color={stockColor(p.stock)} />
                     </div>
-                    <span style={{ fontSize: "0.875rem", minWidth: 20 }}>{p.stock}</span>
+                    <span style={{ fontWeight: 500 }}>{p.name}</span>
                   </div>
                 </td>
-                <td style={{ fontFamily: "var(--font-serif)", fontSize: "0.9rem", color: "var(--ys-text-muted)" }}>
-                  {formatPrice(p.price * p.stock)}
-                </td>
+                <td style={{ fontFamily: "monospace", fontSize: "0.775rem", color: "var(--muted)" }}>{p.reference}</td>
+                <td style={{ color: "var(--muted)" }}>{p.category}</td>
+                <td style={{ fontWeight: 600 }}>{formatPrice(p.price)}</td>
+                <td style={{ textAlign: "center" }}>{p.sold}</td>
                 <td>
-                  <span className={`status-badge status-${p.stockStatus}`}>
-                    {p.stockStatus === "instock" ? "En stock" : p.stockStatus === "lowstock" ? "Faible" : "Épuisé"}
+                  <span style={{ fontWeight: 800, fontSize: "1.125rem", color: p.stock === 0 ? "var(--danger)" : p.stock <= 5 ? "var(--warning)" : "var(--success)" }}>
+                    {p.stock}
                   </span>
                 </td>
                 <td>
+                  <div style={{ background: "var(--bg2)", borderRadius: 99, height: 6, width: 100, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", borderRadius: 99, transition: "width 0.3s",
+                      width: `${Math.min(100, (p.stock / 20) * 100)}%`,
+                      background: p.stock === 0 ? "var(--danger)" : p.stock <= 5 ? "var(--warning)" : "var(--success)",
+                    }} />
+                  </div>
+                </td>
+                <td>
                   {adjustId === p.id ? (
-                    <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
                       <input
-                        type="number"
-                        value={adjustQty}
+                        type="number" value={adjustQty}
                         onChange={(e) => setAdjustQty(e.target.value)}
-                        placeholder="+/-"
-                        style={{ width: 56, padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                        style={{ width: 60, textAlign: "center" }}
+                        placeholder="0"
                         autoFocus
-                        onKeyDown={(e) => e.key === "Enter" && applyAdjust(p.id)}
+                        onKeyDown={(e) => { if (e.key === "Enter") applyAdjust(p.id, parseInt(adjustQty) || 0); if (e.key === "Escape") setAdjustId(null); }}
                       />
-                      <button className="ys-btn ys-btn-primary" onClick={() => applyAdjust(p.id)} style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}>
-                        OK
-                      </button>
-                      <button className="ys-btn ys-btn-ghost" onClick={() => { setAdjustId(null); setAdjustQty(""); }} style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}>
-                        ✕
-                      </button>
+                      <button className="btn btn-primary btn-sm" onClick={() => applyAdjust(p.id, parseInt(adjustQty) || 0)}>OK</button>
+                      <button className="btn-icon" onClick={() => setAdjustId(null)} style={{ fontSize: "0.7rem" }}>✕</button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setAdjustId(p.id)}
-                      style={{ background: "transparent", border: "1px solid var(--ys-border)", color: "var(--ys-text-muted)", cursor: "pointer", padding: "0.25rem 0.625rem", fontSize: "0.7rem", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.375rem", transition: "all 0.15s" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--ys-gold)"; (e.currentTarget as HTMLElement).style.color = "var(--ys-gold)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--ys-border)"; (e.currentTarget as HTMLElement).style.color = "var(--ys-text-muted)"; }}
-                    >
-                      <RefreshCw size={11} /> Ajuster
-                    </button>
+                    <div style={{ display: "flex", gap: "0.25rem" }}>
+                      <button className="btn btn-secondary btn-sm" onClick={() => { setAdjustId(p.id); setAdjustQty(""); }}>
+                        Modifier
+                      </button>
+                      <button className="btn-icon" style={{ color: "var(--success)" }} onClick={() => dispatch({ type: "ADJUST_STOCK", id: p.id, delta: 1 })}><Plus size={12} /></button>
+                      <button className="btn-icon" style={{ color: "var(--danger)" }} onClick={() => dispatch({ type: "ADJUST_STOCK", id: p.id, delta: -1 })} disabled={p.stock === 0}><Minus size={12} /></button>
+                    </div>
                   )}
                 </td>
               </tr>

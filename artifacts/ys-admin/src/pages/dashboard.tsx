@@ -1,126 +1,115 @@
 import AdminLayout from "@/components/layout/AdminLayout";
+import { useStore } from "@/lib/store";
+import { Link } from "wouter";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  BarChart, Bar,
 } from "recharts";
 import {
-  revenueData, categoryData, orders, products, customers, formatPrice, formatDate,
-} from "@/lib/data";
-import {
-  TrendingUp, ShoppingBag, Package, Users, AlertTriangle, ArrowUpRight,
+  TrendingUp, ShoppingBag, Package, Users, AlertTriangle,
+  Clock, CheckCircle2, Truck, Ban, ArrowRight,
 } from "lucide-react";
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  confirmed: "Confirmée",
-  shipped: "Expédiée",
-  delivered: "Livrée",
-  cancelled: "Annulée",
+const STATUS_COLOR: Record<string, string> = {
+  pending: "#F59E0B", confirmed: "#3B82F6", shipped: "#F97316",
+  delivered: "#10B981", cancelled: "#EF4444", refused: "#94A3B8",
 };
 
 export default function Dashboard() {
-  const totalRevenue = orders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((s, o) => s + o.total, 0);
+  const { state, formatPrice, formatDate, isBlacklisted } = useStore();
+  const { orders, products, customers, blacklist } = state;
 
-  const totalOrders = orders.length;
-  const pendingCount = orders.filter((o) => o.status === "pending").length;
-  const lowStock = products.filter((p) => p.stockStatus !== "instock").length;
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const monthStr = now.toISOString().slice(0, 7);
+
+  const todayOrders = orders.filter((o) => o.date.startsWith(todayStr));
+  const monthOrders = orders.filter((o) => o.date.startsWith(monthStr));
+  const pendingOrders = orders.filter((o) => o.status === "pending");
+  const deliveredOrders = orders.filter((o) => o.status === "delivered");
+  const blacklistAlerts = orders.filter((o) => isBlacklisted(o.phone) && o.status === "pending");
+
+  const totalRevenue = orders.filter((o) => o.status === "delivered").reduce((s, o) => s + o.total, 0);
+  const monthRevenue = monthOrders.filter((o) => o.status !== "cancelled" && o.status !== "refused").reduce((s, o) => s + o.total, 0);
+  const outOfStock = products.filter((p) => p.stock === 0);
+  const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5);
+
+  const revenueData = [
+    { month: "Nov", revenue: 48000, orders: 12 },
+    { month: "Déc", revenue: 72000, orders: 18 },
+    { month: "Jan", revenue: 55000, orders: 14 },
+    { month: "Fév", revenue: 61000, orders: 15 },
+    { month: "Mar", revenue: 83000, orders: 21 },
+    { month: "Avr", revenue: 95000, orders: 24 },
+    { month: "Mai", revenue: monthRevenue || 112000, orders: monthOrders.length || 28 },
+  ];
+
+  const recentOrders = [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   const kpis = [
     {
+      label: "Commandes ce mois",
+      value: monthOrders.length,
+      sub: `${todayOrders.length} aujourd'hui`,
+      icon: ShoppingBag,
+      color: "#6366F1",
+      bg: "#EEF2FF",
+    },
+    {
       label: "Chiffre d'affaires",
       value: formatPrice(totalRevenue),
-      sub: "+18% vs mois dernier",
+      sub: `${formatPrice(monthRevenue)} ce mois`,
       icon: TrendingUp,
-      color: "var(--ys-gold)",
-      bg: "rgba(201,168,76,0.08)",
+      color: "#10B981",
+      bg: "#ECFDF5",
     },
     {
-      label: "Commandes",
-      value: totalOrders,
-      sub: `${pendingCount} en attente`,
-      icon: ShoppingBag,
-      color: "var(--ys-info)",
-      bg: "rgba(76,140,201,0.08)",
-    },
-    {
-      label: "Produits",
-      value: products.length,
-      sub: `${lowStock} alertes stock`,
-      icon: Package,
-      color: "var(--ys-success)",
-      bg: "rgba(76,175,124,0.08)",
+      label: "En attente",
+      value: pendingOrders.length,
+      sub: `${deliveredOrders.length} livrées au total`,
+      icon: Clock,
+      color: "#F59E0B",
+      bg: "#FFFBEB",
     },
     {
       label: "Clients",
       value: customers.length,
-      sub: `${customers.filter((c) => c.vip).length} VIP`,
+      sub: `${blacklist.length} blacklisté${blacklist.length > 1 ? "s" : ""}`,
       icon: Users,
-      color: "#C97DC9",
-      bg: "rgba(201,125,201,0.08)",
+      color: "#3B82F6",
+      bg: "#EFF6FF",
     },
   ];
 
   return (
-    <AdminLayout title="Tableau de bord" subtitle="Vue d'ensemble de la boutique">
-      {/* KPIs */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "1rem",
-          marginBottom: "1.5rem",
-        }}
-      >
+    <AdminLayout title="Tableau de bord" subtitle={`Bonjour — ${new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}`}>
+
+      {/* Blacklist Alerts */}
+      {blacklistAlerts.length > 0 && (
+        <div className="alert alert-danger" style={{ marginBottom: "1.25rem", alignItems: "center" }}>
+          <Ban size={16} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <strong>{blacklistAlerts.length} commande{blacklistAlerts.length > 1 ? "s" : ""} provenant de numéros blacklistés</strong>
+            <span style={{ marginLeft: "0.5rem", opacity: 0.8 }}>— Vérifiez les commandes en attente.</span>
+          </div>
+          <Link href="/admin/orders">
+            <button className="btn btn-sm" style={{ background: "var(--danger)", color: "white" }}>Voir <ArrowRight size={12} /></button>
+          </Link>
+        </div>
+      )}
+
+      {/* KPI Cards */}
+      <div className="grid-4" style={{ marginBottom: "1.5rem" }}>
         {kpis.map((k) => (
-          <div
-            key={k.label}
-            className="ys-card animate-in"
-            style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                background: k.bg,
-                border: `1px solid ${k.color}30`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <k.icon size={18} style={{ color: k.color }} />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: "0.7rem",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "var(--ys-text-muted)",
-                  marginBottom: "0.25rem",
-                }}
-              >
-                {k.label}
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "1.5rem",
-                  fontWeight: 400,
-                  color: "var(--ys-text)",
-                  lineHeight: 1,
-                  marginBottom: "0.25rem",
-                }}
-              >
-                {k.value}
-              </div>
-              <div style={{ fontSize: "0.7rem", color: k.color }}>
-                {k.sub}
+          <div key={k.label} className="card" style={{ padding: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.875rem" }}>
+              <div className="stat-icon" style={{ background: k.bg }}>
+                <k.icon size={18} color={k.color} />
               </div>
             </div>
+            <div style={{ fontSize: "1.625rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "0.25rem" }}>{k.value}</div>
+            <div style={{ fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.125rem" }}>{k.label}</div>
+            <div style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{k.sub}</div>
           </div>
         ))}
       </div>
@@ -128,192 +117,107 @@ export default function Dashboard() {
       {/* Charts row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "1rem", marginBottom: "1.5rem" }}>
         {/* Revenue chart */}
-        <div className="ys-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <div>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 500, marginBottom: 2 }}>
-                Évolution des revenus
-              </div>
-              <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", letterSpacing: "0.05em" }}>
-                6 derniers mois
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", color: "var(--ys-success)", fontSize: "0.8rem" }}>
-              <ArrowUpRight size={14} />
-              +18%
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={revenueData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Chiffre d'affaires — 7 derniers mois</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={revenueData}>
               <defs>
-                <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#C9A84C" stopOpacity={0} />
+                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(201,168,76,0.07)" vertical={false} />
-              <XAxis
-                dataKey="month"
-                tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "var(--ys-text-muted)", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v / 1000}k`}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--ys-surface-2)",
-                  border: "1px solid var(--ys-border)",
-                  borderRadius: 0,
-                  fontSize: "0.8rem",
-                  color: "var(--ys-text)",
-                }}
-                formatter={(val: number) => [formatPrice(val), "Revenus"]}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#C9A84C"
-                strokeWidth={2}
-                fill="url(#goldGrad)"
-                dot={{ fill: "#C9A84C", r: 3, strokeWidth: 0 }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v/1000}k`} />
+              <Tooltip formatter={(v: number) => [formatPrice(v), "CA"]} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+              <Area type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2} fill="url(#revGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Category pie */}
-        <div className="ys-card" style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-            Ventes par catégorie
-          </div>
-          <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", marginBottom: "1rem", letterSpacing: "0.05em" }}>
-            Ce mois
-          </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                innerRadius={45}
-                outerRadius={70}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {categoryData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: "var(--ys-surface-2)",
-                  border: "1px solid var(--ys-border)",
-                  borderRadius: 0,
-                  fontSize: "0.8rem",
-                  color: "var(--ys-text)",
-                }}
-                formatter={(val) => [`${val}%`, ""]}
-              />
-            </PieChart>
+        {/* Orders bar */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <h3 style={{ marginBottom: "1rem" }}>Commandes / mois</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+              <Bar dataKey="orders" fill="#6366F1" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "auto" }}>
-            {categoryData.map((c) => (
-              <div key={c.name} style={{ display: "flex", alignItems: "center", gap: "0.625rem", fontSize: "0.8rem" }}>
-                <div style={{ width: 8, height: 8, background: c.color, flexShrink: 0 }} />
-                <span style={{ color: "var(--ys-text-muted)", flex: 1 }}>{c.name}</span>
-                <span style={{ color: "var(--ys-text)", fontWeight: 500 }}>{c.value}%</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
       {/* Bottom row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: "1rem" }}>
         {/* Recent orders */}
-        <div className="ys-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 500 }}>
-              Commandes récentes
-            </div>
-            <a href="/admin/orders" style={{ fontSize: "0.7rem", color: "var(--ys-gold)", letterSpacing: "0.08em", textDecoration: "none", textTransform: "uppercase" }}>
-              Voir tout →
-            </a>
+        <div className="card">
+          <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3>Dernières commandes</h3>
+            <Link href="/admin/orders"><button className="btn btn-ghost btn-sm">Tout voir <ArrowRight size={12} /></button></Link>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-            {orders.slice(0, 5).map((o) => (
-              <div
-                key={o.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.625rem",
-                  background: "var(--ys-surface-2)",
-                  border: "1px solid rgba(201,168,76,0.07)",
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--ys-text)" }}>
-                    {o.reference}
-                  </div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {o.customerName}
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontSize: "0.8rem", color: "var(--ys-gold)", fontFamily: "var(--font-serif)" }}>
-                    {formatPrice(o.total)}
-                  </div>
-                  <span className={`status-badge status-${o.status}`} style={{ marginTop: 2 }}>
-                    {STATUS_LABELS[o.status]}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Référence</th><th>Client</th><th>Ville</th><th>Total</th><th>Statut</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((o) => {
+                  const bl = isBlacklisted(o.phone);
+                  return (
+                    <tr key={o.id} className={bl ? "row-blacklist" : ""}>
+                      <td style={{ fontFamily: "monospace", fontSize: "0.775rem" }}>
+                        {bl && <span title="Numéro blacklisté">🚫 </span>}
+                        {o.reference}
+                      </td>
+                      <td>{o.customerName}</td>
+                      <td style={{ color: "var(--muted)" }}>{o.city}</td>
+                      <td style={{ fontWeight: 600 }}>{formatPrice(o.total)}</td>
+                      <td>
+                        <span className={`badge badge-${o.status}`}>{o.status === "pending" ? "En attente" : o.status === "confirmed" ? "Confirmée" : o.status === "shipped" ? "Expédiée" : o.status === "delivered" ? "Livrée" : o.status === "cancelled" ? "Annulée" : "Refusée"}</span>
+                      </td>
+                      <td style={{ color: "var(--muted)" }}>{formatDate(o.date)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Low stock alerts */}
-        <div className="ys-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 500 }}>
-              Alertes inventaire
-            </div>
-            <AlertTriangle size={16} style={{ color: "var(--ys-warning)" }} />
+        {/* Stock alerts */}
+        <div className="card">
+          <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3>Alertes stock</h3>
+            <Link href="/admin/inventory"><button className="btn btn-ghost btn-sm">Gérer <ArrowRight size={12} /></button></Link>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-            {products
-              .filter((p) => p.stockStatus !== "instock")
-              .map((p) => (
-                <div
-                  key={p.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    padding: "0.625rem",
-                    background: "var(--ys-surface-2)",
-                    border: "1px solid rgba(201,168,76,0.07)",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--ys-text)" }}>{p.name}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--ys-text-muted)" }}>{p.reference}</div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: "0.8rem", color: "var(--ys-text)" }}>{p.stock} restants</div>
-                    <span className={`status-badge status-${p.stockStatus}`} style={{ marginTop: 2 }}>
-                      {p.stockStatus === "outofstock" ? "Épuisé" : "Stock faible"}
-                    </span>
-                  </div>
+          <div style={{ padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {outOfStock.length === 0 && lowStock.length === 0 && (
+              <div style={{ color: "var(--muted)", fontSize: "0.8125rem", textAlign: "center", padding: "1rem" }}>✅ Tous les stocks sont OK</div>
+            )}
+            {outOfStock.map((p) => (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.625rem", background: "var(--danger-bg)", borderRadius: "var(--radius-sm)", fontSize: "0.8rem" }}>
+                <Package size={13} color="var(--danger)" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                  <div style={{ color: "var(--danger)", fontSize: "0.7rem" }}>Épuisé</div>
                 </div>
-              ))}
+              </div>
+            ))}
+            {lowStock.map((p) => (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.625rem", background: "var(--warning-bg)", borderRadius: "var(--radius-sm)", fontSize: "0.8rem" }}>
+                <AlertTriangle size={13} color="var(--warning)" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                  <div style={{ color: "var(--warning)", fontSize: "0.7rem" }}>Stock faible ({p.stock} restants)</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

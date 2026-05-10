@@ -1,0 +1,136 @@
+
+
+
+
+🖥️ Dashboard Admin — Spécification Complète
+
+1. 📊 Page d'Accueil (Vue Générale / KPIs)
+Ce qu'elle contient :
+
+Cartes de statistiques en haut :
+
+Total Commandes (aujourd'hui / ce mois)
+Chiffre d'affaires (aujourd'hui / ce mois)
+Commandes en attente
+Commandes livrées
+Clients blacklistés
+
+
+Graphique : Courbe des ventes sur 7 / 30 jours
+Tableau des dernières commandes (5 dernières) avec statut coloré
+Alertes : Commandes passées par des numéros blacklistés (badge rouge en haut)
+
+
+2. 📦 Page Commandes
+Liste des commandes avec colonnes :
+#ClientTéléphoneVilleProduitsTotalDateStatutActions
+Filtres disponibles :
+
+Par statut : En attente / Confirmée / Expédiée / Livrée / Annulée / Refusée
+Par ville
+Par date (plage)
+Par numéro de téléphone
+
+Statuts & Couleurs :
+
+🟡 En attente — commande reçue, pas encore traitée
+🔵 Confirmée — admin a appelé et confirmé avec le client
+🟠 Expédiée — livreur en route
+🟢 Livrée — commande remise au client
+🔴 Annulée — annulée par le client ou l'admin
+⚫ Refusée — client n'a pas répondu / refus de livraison
+
+Actions sur chaque commande :
+
+👁️ Voir — ouvre le détail complet
+✏️ Changer le statut — menu déroulant pour faire avancer la commande
+🚫 Blacklister — ajoute le numéro à la blacklist directement depuis la commande
+🗑️ Supprimer
+
+Page Détail d'une Commande :
+
+Infos client : Nom, Téléphone, Ville, Adresse
+Liste des produits commandés (image miniature, nom, quantité, prix)
+Total de la commande
+Historique des statuts (ex : "En attente → Confirmée le 10/05 à 14h32")
+Notes admin (champ texte libre pour écrire des remarques)
+Bouton "Ajouter à la Blacklist" avec motif
+
+
+3. 🚫 Système Blacklist (Clients Menteurs)
+Logique complète :
+Quand un livreur se déplace et le client ne répond pas / refuse de prendre → l'admin ouvre la commande ou va dans la page Clients → cherche par numéro → clique "Ajouter à la Blacklist" → entre le motif (ex : "Livreur déplacé, client ne répond pas").
+Page Blacklist — colonnes :
+NuméroNomNb de commandesMotifDate d'ajoutActions
+Actions :
+
+👁️ Voir l'historique des commandes de ce numéro
+✏️ Modifier le motif
+✅ Retirer de la blacklist (si client s'explique)
+
+Détection automatique à la commande :
+Quand un client passe commande sur le site avec un numéro blacklisté :
+
+La commande apparaît en rouge dans la liste des commandes
+Badge d'alerte : ⚠️ "Ce numéro est dans la blacklist — Motif : Livreur déplacé, client ne répond pas"
+L'admin voit deux boutons : ✅ Accepter quand même | 🚫 Refuser la commande
+
+
+4. 👥 Page Clients
+Liste de tous les clients ayant passé commande :
+NomTéléphoneVilleNb commandesTotal dépenséStatutActions
+Statut client :
+
+🟢 Normal
+🔴 Blacklisté (ligne colorée en rouge)
+
+Actions :
+
+👁️ Voir toutes ses commandes
+🚫 Ajouter à la blacklist
+📝 Ajouter une note
+
+Page Détail Client :
+
+Infos personnelles
+Historique complet de toutes ses commandes avec statuts
+Badge blacklist si applicable
+
+
+5. 🛍️ Page Produits
+Liste des produits :
+ImageNomCatégoriePrixStockStatutActions
+Filtres : Par catégorie (Homme / Femme), par stock (disponible / épuisé)
+Actions :
+
+✏️ Modifier
+🗑️ Supprimer
+👁️ Voir sur le site
+
+Formulaire Création / Modification de Produit :
+
+Nom du produit
+Description courte (affichée dans le catalogue)
+Description longue / storytelling (affichée sur la page produit)
+Prix (MAD)
+Prix barré (ancien prix pour afficher une promo)
+Catégorie : Homme / Femme
+Mouvement : Automatique / Quartz / Mécanique
+Matériau boîtier : Acier / Or / Argent / ...
+Stock (quantité disponible)
+Images produit :
+
+Upload multiple (glisser-déposer)
+Choix de l'image principale
+Prévisualisation avant enregistrement
+Suppression individuelle des images
+
+
+Tags : Nouveauté, Bestseller, Promo, ...
+Visible sur le site : Oui / Non (toggle). ⚙️ Paramètres
+
+Informations boutique : Nom, logo, numéro WhatsApp de contact
+Villes de livraison : Ajouter / supprimer des villes disponibles au checkout
+Frais de livraison par ville (ex : Casablanca 25 MAD, autres 35 MAD)
+Comptes admin : Ajouter un second admin, changer mot de passe
+Mode maintenance : Masquer le site aux visiteurs pendant une mise à jour
