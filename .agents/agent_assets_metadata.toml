@@ -1,0 +1,62 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "VhMx0OvuPfRSrY83w5CFa"
+uri = "file://artifacts/yswatchs/public/images/obsidian-1.png"
+type = "image"
+title = "Obsidian I Men's Watch"
+
+[[generated]]
+id = "rZ7DxrMOiivgeeFE0nyhM"
+uri = "file://artifacts/yswatchs/public/images/atlas-noir.png"
+type = "image"
+title = "Atlas Noir Men's Watch"
+
+[[generated]]
+id = "jhPXlSRZzVt0rRnk0dFGb"
+uri = "file://artifacts/yswatchs/public/images/chronos-vii.png"
+type = "image"
+title = "Chronos VII Men's Watch"
+
+[[generated]]
+id = "2txapf3a1Co5bEjcDKAg9"
+uri = "file://artifacts/yswatchs/public/images/meridian.png"
+type = "image"
+title = "Meridian Men's Watch"
+
+[[generated]]
+id = "2K8TpCiXsER5lxvv3JySo"
+uri = "file://artifacts/yswatchs/public/images/lumiere.png"
+type = "image"
+title = "Lumiere Women's Watch"
+
+[[generated]]
+id = "Fhnwr5lmgchqhp9dzSymN"
+uri = "file://artifacts/yswatchs/public/images/aurore.png"
+type = "image"
+title = "Aurore Women's Watch"
+
+[[generated]]
+id = "u9c6DtOQoTKVlaGcH6XUN"
+uri = "file://artifacts/yswatchs/public/images/celeste.png"
+type = "image"
+title = "Celeste Women's Watch"
+
+[[generated]]
+id = "dw4E3uS_2NUhqdfoBBdTy"
+uri = "file://artifacts/yswatchs/public/images/venus.png"
+type = "image"
+title = "Venus Women's Watch"
+
+[[generated]]
+id = "P87AQDF7aFg_LvCgCb4wY"
+uri = "file://artifacts/yswatchs/public/images/ceinture.png"
+type = "image"
+title = "Ceinture Royale Belt"
+
+[[generated]]
+id = "Db4zhMke6oQx-Co8EM7OG"
+uri = "file://artifacts/yswatchs/public/images/parfum.png"
+type = "image"
+title = "Eau de Chronos Perfume"
