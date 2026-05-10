@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiFilter, FiX, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiFilter, FiX, FiChevronDown, FiChevronUp, FiTag } from "react-icons/fi";
 import { products, formatPrice, getDiscountedPrice, type Category, type Movement, type CaseMaterial, type StrapType, type CaseSize } from "@/lib/data";
 import Navbar from "@/components/layout/navbar";
 
@@ -21,6 +21,14 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] } },
 };
 
+/* ── Icons for filter groups ────────────────────────── */
+const groupIcons: Record<string, string> = {
+  Mouvement: '⚙',
+  Boîtier: '⬡',
+  Bracelet: '⌒',
+  Taille: '◎',
+};
+
 function FilterSection({ title, options, selected, onChange }: {
   title: string;
   options: { value: string; label: string }[];
@@ -29,28 +37,116 @@ function FilterSection({ title, options, selected, onChange }: {
 }) {
   const [open, setOpen] = useState(true);
   if (options.length === 0) return null;
+  const hasActive = selected.length > 0;
+
   return (
-    <div style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-      <button onClick={() => setOpen(o => !o)}
-        className="flex items-center justify-between w-full mb-3"
-        style={{ fontFamily: "'Jost', sans-serif", fontSize: '0.6rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.7)' }}>
-        {title}
-        {open ? <FiChevronUp style={{ fontSize: '0.75rem' }} /> : <FiChevronDown style={{ fontSize: '0.75rem' }} />}
+    <div style={{
+      marginBottom: '0.25rem',
+      borderRadius: 0,
+      overflow: 'hidden',
+      border: '1px solid var(--ys-border)',
+      background: hasActive ? 'var(--ys-gold-glow)' : 'transparent',
+      transition: 'background 0.3s',
+    }}>
+      {/* Group header */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center justify-between w-full"
+        style={{
+          padding: '0.75rem 0.9rem',
+          background: 'transparent',
+          cursor: 'pointer',
+          gap: '0.5rem',
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <span style={{ fontSize: '0.9rem', color: 'var(--ys-gold)', opacity: 0.7, lineHeight: 1 }}>
+            {groupIcons[title] ?? '·'}
+          </span>
+          <span style={{
+            fontFamily: "'Jost', sans-serif",
+            fontSize: '0.65rem',
+            letterSpacing: '0.38em',
+            textTransform: 'uppercase',
+            fontWeight: hasActive ? 500 : 400,
+            color: hasActive ? 'var(--ys-gold)' : 'var(--ys-text)',
+            transition: 'color 0.25s, font-weight 0.25s',
+          }}>
+            {title}
+          </span>
+          {hasActive && (
+            <span style={{
+              fontSize: '0.52rem',
+              fontFamily: "'Jost', sans-serif",
+              background: 'var(--ys-gold)',
+              color: 'var(--ys-bg)',
+              borderRadius: '999px',
+              padding: '0.1em 0.5em',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+            }}>
+              {selected.length}
+            </span>
+          )}
+        </div>
+        {open
+          ? <FiChevronUp style={{ fontSize: '0.8rem', color: 'var(--ys-gold)', opacity: 0.6, flexShrink: 0 }} />
+          : <FiChevronDown style={{ fontSize: '0.8rem', color: 'var(--ys-text-muted)', flexShrink: 0 }} />
+        }
       </button>
+
+      {/* Options */}
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <div className="flex flex-col gap-2">
-              {options.map(opt => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
-                  <input type="checkbox" checked={selected.includes(opt.value)}
-                    onChange={() => onChange(opt.value)} className="filter-checkbox" />
-                  <span style={{ fontSize: '0.75rem', color: selected.includes(opt.value) ? '#C9A84C' : 'rgba(245,240,232,0.5)', transition: 'color 0.2s', letterSpacing: '0.08em' }}>
-                    {opt.label}
-                  </span>
-                </label>
-              ))}
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              padding: '0.25rem 0.9rem 0.85rem',
+              borderTop: '1px solid var(--ys-border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0',
+            }}>
+              {options.map(opt => {
+                const active = selected.includes(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    className="flex items-center gap-2.5 cursor-pointer group"
+                    style={{
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid var(--ys-border)',
+                      transition: 'background 0.2s',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() => onChange(opt.value)}
+                      className="filter-checkbox"
+                    />
+                    <span style={{
+                      fontSize: '0.8rem',
+                      fontFamily: "'Jost', sans-serif",
+                      fontWeight: active ? 500 : 300,
+                      letterSpacing: '0.07em',
+                      color: active ? 'var(--ys-gold)' : 'var(--ys-text)',
+                      transition: 'color 0.2s, font-weight 0.2s',
+                      flex: 1,
+                    }}>
+                      {opt.label}
+                    </span>
+                    {active && (
+                      <span style={{ fontSize: '0.6rem', color: 'var(--ys-gold)', flexShrink: 0 }}>✓</span>
+                    )}
+                  </label>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -58,6 +154,64 @@ function FilterSection({ title, options, selected, onChange }: {
     </div>
   );
 }
+
+/* ── Active filter pills ────────────────────────────── */
+function ActivePills({ filters, toggleFilter, clearAll }: {
+  filters: Filters;
+  toggleFilter: <K extends keyof Filters>(key: K, v: Filters[K][number]) => void;
+  clearAll: () => void;
+}) {
+  const allActive = [
+    ...filters.movement.map(v => ({ key: 'movement' as const, v, label: movLabels[v] || v })),
+    ...filters.caseMaterial.map(v => ({ key: 'caseMaterial' as const, v, label: matLabels[v] || v })),
+    ...filters.strapType.map(v => ({ key: 'strapType' as const, v, label: strapLabels[v] || v })),
+    ...filters.caseSize.map(v => ({ key: 'caseSize' as const, v, label: sizeLabels[v] || v })),
+  ];
+  if (allActive.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem', alignItems: 'center' }}>
+      <span style={{ fontSize: '0.58rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ys-text-muted)', fontFamily: "'Jost', sans-serif", marginRight: '0.25rem' }}>
+        Actifs:
+      </span>
+      {allActive.map(({ key, v, label }) => (
+        <button key={`${key}-${v}`}
+          onClick={() => toggleFilter(key, v as never)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+            fontSize: '0.62rem', fontFamily: "'Jost', sans-serif",
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            padding: '0.3em 0.65em',
+            background: 'var(--ys-gold-dim)',
+            border: '1px solid var(--ys-gold)',
+            color: 'var(--ys-gold)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          className="hover:opacity-70"
+        >
+          {label} <FiX style={{ fontSize: '0.6rem' }} />
+        </button>
+      ))}
+      <button onClick={clearAll}
+        style={{
+          fontSize: '0.58rem', fontFamily: "'Jost', sans-serif",
+          letterSpacing: '0.25em', textTransform: 'uppercase',
+          color: 'var(--ys-text-muted)', cursor: 'pointer',
+          background: 'none', border: 'none', padding: '0.3em 0.4em',
+          transition: 'color 0.2s',
+        }}
+        className="hover:text-[var(--ys-gold)]"
+      >
+        Tout effacer
+      </button>
+    </div>
+  );
+}
+
+const movLabels: Record<string, string> = { automatique: 'Automatique', manuel: 'Manuel', quartz: 'Quartz' };
+const matLabels: Record<string, string> = { acier: 'Acier 316L', 'or-jaune': 'Or jaune', 'or-rose': 'Or rose', platine: 'Platine' };
+const strapLabels: Record<string, string> = { cuir: 'Cuir', acier: 'Acier', caoutchouc: 'Caoutchouc' };
+const sizeLabels: Record<string, string> = { grand: 'Grand (42mm+)', moyen: 'Moyen (38–41mm)', compact: 'Compact (≤37mm)' };
 
 export default function CataloguePage() {
   const [, params] = useRoute("/montres/:genre");
@@ -82,6 +236,7 @@ export default function CataloguePage() {
     }));
   };
 
+  const clearAll = () => setFilters({ movement: [], caseMaterial: [], strapType: [], caseSize: [] });
   const activeCount = Object.values(filters).reduce((s, a) => s + a.length, 0);
 
   const filtered = catProducts.filter(p => {
@@ -92,55 +247,98 @@ export default function CataloguePage() {
     return true;
   });
 
-  const movLabels: Record<string, string> = { automatique: 'Automatique', manuel: 'Manuel', quartz: 'Quartz' };
-  const matLabels: Record<string, string> = { acier: 'Acier 316L', 'or-jaune': 'Or jaune', 'or-rose': 'Or rose', platine: 'Platine' };
-  const strapLabels: Record<string, string> = { cuir: 'Cuir', acier: 'Acier', caoutchouc: 'Caoutchouc' };
-  const sizeLabels: Record<string, string> = { grand: 'Grand (42mm+)', moyen: 'Moyen (38–41mm)', compact: 'Compact (≤37mm)' };
-
   const label = genre === 'homme' ? 'Collection Homme' : genre === 'femme' ? 'Collection Femme' : 'Toutes les Montres';
 
   const SidebarContent = () => (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <p style={{ fontFamily: "'Jost', sans-serif", fontSize: '0.6rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.7)' }}>
-          Filtres {activeCount > 0 && `(${activeCount})`}
-        </p>
+      {/* Sidebar header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: '1rem',
+        paddingBottom: '0.75rem',
+        borderBottom: '2px solid var(--ys-gold)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <FiFilter style={{ color: 'var(--ys-gold)', fontSize: '0.75rem' }} />
+          <span style={{
+            fontFamily: "'Jost', sans-serif",
+            fontSize: '0.62rem',
+            letterSpacing: '0.45em',
+            textTransform: 'uppercase',
+            color: 'var(--ys-text)',
+            fontWeight: 500,
+          }}>
+            Filtrer
+          </span>
+          {activeCount > 0 && (
+            <span style={{
+              fontSize: '0.52rem',
+              fontFamily: "'Jost', sans-serif",
+              background: 'var(--ys-gold)',
+              color: 'var(--ys-bg)',
+              borderRadius: '999px',
+              padding: '0.1em 0.55em',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+            }}>
+              {activeCount}
+            </span>
+          )}
+        </div>
         {activeCount > 0 && (
-          <button onClick={() => setFilters({ movement: [], caseMaterial: [], strapType: [], caseSize: [] })}
-            style={{ fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(245,240,232,0.35)' }}
-            className="hover:text-[#C9A84C] transition-colors">
-            Effacer
+          <button onClick={clearAll}
+            style={{
+              fontSize: '0.58rem',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              color: 'var(--ys-gold)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: "'Jost', sans-serif",
+              opacity: 0.7,
+            }}
+            className="hover:opacity-100 transition-opacity">
+            Effacer tout
           </button>
         )}
       </div>
-      <FilterSection title="Mouvement" options={movementOptions.map(v => ({ value: v, label: movLabels[v] || v }))}
-        selected={filters.movement} onChange={v => toggleFilter('movement', v as Movement)} />
-      <FilterSection title="Boîtier" options={caseMaterialOptions.map(v => ({ value: v, label: matLabels[v] || v }))}
-        selected={filters.caseMaterial} onChange={v => toggleFilter('caseMaterial', v as CaseMaterial)} />
-      <FilterSection title="Bracelet" options={strapOptions.map(v => ({ value: v, label: strapLabels[v] || v }))}
-        selected={filters.strapType} onChange={v => toggleFilter('strapType', v as StrapType)} />
-      <FilterSection title="Taille" options={caseSizeOptions.map(v => ({ value: v, label: sizeLabels[v] || v }))}
-        selected={filters.caseSize} onChange={v => toggleFilter('caseSize', v as CaseSize)} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <FilterSection title="Mouvement"
+          options={movementOptions.map(v => ({ value: v, label: movLabels[v] || v }))}
+          selected={filters.movement} onChange={v => toggleFilter('movement', v as Movement)} />
+        <FilterSection title="Boîtier"
+          options={caseMaterialOptions.map(v => ({ value: v, label: matLabels[v] || v }))}
+          selected={filters.caseMaterial} onChange={v => toggleFilter('caseMaterial', v as CaseMaterial)} />
+        <FilterSection title="Bracelet"
+          options={strapOptions.map(v => ({ value: v, label: strapLabels[v] || v }))}
+          selected={filters.strapType} onChange={v => toggleFilter('strapType', v as StrapType)} />
+        <FilterSection title="Taille"
+          options={caseSizeOptions.map(v => ({ value: v, label: sizeLabels[v] || v }))}
+          selected={filters.caseSize} onChange={v => toggleFilter('caseSize', v as CaseSize)} />
+      </div>
     </div>
   );
 
   return (
-    <div style={{ background: '#0C0A08', color: '#F5F0E8', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--ys-bg)', color: 'var(--ys-text)', minHeight: '100vh', transition: 'background 0.45s, color 0.45s' }}>
       <Navbar />
 
       {/* Header */}
-      <div className="relative pt-28 sm:pt-32 pb-10 px-6 overflow-hidden" style={{ background: '#09070A' }}>
+      <div className="relative pt-28 sm:pt-32 pb-10 px-6 overflow-hidden"
+        style={{ background: 'var(--ys-surface)', transition: 'background 0.45s' }}>
         <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(201,168,76,0.07) 0%, transparent 55%)',
+          background: 'radial-gradient(ellipse 60% 80% at 50% 100%, var(--ys-gold-glow) 0%, transparent 55%)',
         }} />
         <div className="h-[2px] absolute top-0 left-0 right-0"
-          style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.4), transparent)' }} />
+          style={{ background: 'linear-gradient(to right, transparent, var(--ys-gold), transparent)', opacity: 0.4 }} />
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <p className="label-victorian mb-4">✦ &nbsp; {genre === 'homme' ? 'Horlogerie Masculine' : genre === 'femme' ? 'Horlogerie Féminine' : 'Toutes Catégories'} &nbsp; ✦</p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', fontWeight: 300, letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', fontWeight: 300, letterSpacing: '0.04em', marginBottom: '0.5rem', color: 'var(--ys-text)' }}>
             {label}
           </h1>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.3)', letterSpacing: '0.25em' }}>
+          <p style={{ fontSize: '0.7rem', color: 'var(--ys-text-muted)', letterSpacing: '0.25em' }}>
             {filtered.length} pièce{filtered.length !== 1 ? 's' : ''} {activeCount > 0 ? 'filtrées' : 'disponibles'}
           </p>
         </div>
@@ -151,32 +349,43 @@ export default function CataloguePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {/* Mobile filter button */}
         <div className="flex items-center justify-between mb-8 lg:hidden">
-          <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.4)', letterSpacing: '0.2em' }}>
+          <p style={{ fontSize: '0.7rem', color: 'var(--ys-text-muted)', letterSpacing: '0.2em' }}>
             {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
           </p>
           <button onClick={() => setMobileFilterOpen(true)} className="btn-victorian flex items-center gap-2"
             style={{ padding: '0.6rem 1.2rem' }}>
             <FiFilter style={{ fontSize: '0.75rem' }} />
-            Filtres {activeCount > 0 && `(${activeCount})`}
+            Filtres {activeCount > 0 && (
+              <span style={{
+                background: 'var(--ys-gold)', color: 'var(--ys-bg)',
+                fontSize: '0.52rem', fontWeight: 700,
+                borderRadius: '999px', padding: '0.1em 0.5em',
+              }}>{activeCount}</span>
+            )}
           </button>
         </div>
 
-        <div className="flex gap-10">
+        {/* Active filter pills (above grid on mobile) */}
+        <div className="lg:hidden mb-2">
+          <ActivePills filters={filters} toggleFilter={toggleFilter} clearAll={clearAll} />
+        </div>
+
+        <div className="flex gap-8 xl:gap-12">
           {/* Sidebar desktop */}
-          <aside className="hidden lg:block w-52 flex-shrink-0 sticky top-24 self-start">
-            <div style={{ borderTop: '1px solid rgba(201,168,76,0.2)', paddingTop: '1.5rem' }}>
-              <SidebarContent />
+          <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-24 self-start">
+            <SidebarContent />
+            <div style={{ marginTop: '1rem' }}>
+              <ActivePills filters={filters} toggleFilter={toggleFilter} clearAll={clearAll} />
             </div>
           </aside>
 
           {/* Products grid */}
           {filtered.length === 0 ? (
             <div className="flex-1 text-center py-24">
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', fontWeight: 300, color: 'rgba(245,240,232,0.2)', marginBottom: '1.5rem' }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', fontWeight: 300, color: 'var(--ys-text-dim)', marginBottom: '1.5rem' }}>
                 Aucune pièce trouvée
               </p>
-              <button onClick={() => setFilters({ movement: [], caseMaterial: [], strapType: [], caseSize: [] })}
-                className="btn-victorian">Effacer les filtres</button>
+              <button onClick={clearAll} className="btn-victorian">Effacer les filtres</button>
             </div>
           ) : (
             <motion.div variants={stagger} initial="hidden" animate="visible"
@@ -190,15 +399,17 @@ export default function CataloguePage() {
                         <div className="watch-display aspect-square flex items-center justify-center p-7 sm:p-9 relative">
                           <img src={product.images[0]} alt={product.name}
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
-                            style={{ maxHeight: '100%', maxWidth: '100%', filter: 'drop-shadow(0 10px 35px rgba(0,0,0,0.7))' }} />
+                            style={{ maxHeight: '100%', maxWidth: '100%', filter: 'var(--ys-img-filter)' }} />
                           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                             {product.discount && (
                               <span className="promo-badge text-[7px] tracking-[0.2em] uppercase px-2 py-0.5 font-medium"
-                                style={{ background: '#C9A84C', color: '#0C0A08' }}>-{product.discount}%</span>
+                                style={{ background: 'var(--ys-gold)', color: 'var(--ys-bg)' }}>-{product.discount}%</span>
                             )}
                             {product.isNew && (
                               <span className="text-[7px] tracking-[0.2em] uppercase px-2 py-0.5"
-                                style={{ background: '#1C1408', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.3)' }}>Nouveau</span>
+                                style={{ background: 'var(--ys-surface-2)', color: 'var(--ys-gold)', border: '1px solid var(--ys-border)' }}>
+                                Nouveau
+                              </span>
                             )}
                             {!product.inStock && (
                               <span className="text-[7px] tracking-[0.2em] uppercase px-2 py-0.5"
@@ -206,13 +417,13 @@ export default function CataloguePage() {
                             )}
                           </div>
                         </div>
-                        <div className="p-4 sm:p-5 flex-1 flex flex-col" style={{ borderTop: '1px solid rgba(201,168,76,0.13)' }}>
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col" style={{ borderTop: '1px solid var(--ys-border)' }}>
                           <p className="label-victorian mb-2" style={{ fontSize: '0.53rem' }}>
                             {product.movement === 'automatique' ? 'Mécanique Auto.' : 'Quartz'}
                             {product.caseMaterial && ` · ${matLabels[product.caseMaterial]}`}
                           </p>
-                          <h3 className="flex-1 mb-3 group-hover:text-[#C9A84C] transition-colors"
-                            style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.2rem', fontWeight: 400, letterSpacing: '0.02em' }}>
+                          <h3 className="flex-1 mb-3 group-hover:text-[var(--ys-gold)] transition-colors"
+                            style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.2rem', fontWeight: 400, letterSpacing: '0.02em', color: 'var(--ys-text)' }}>
                             {product.name}
                           </h3>
                           <div className="flex items-center gap-2">
@@ -220,7 +431,7 @@ export default function CataloguePage() {
                               {disc ? formatPrice(disc) : formatPrice(product.price)}
                             </span>
                             {disc && (
-                              <span style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.22)', textDecoration: 'line-through' }}>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--ys-text-dim)', textDecoration: 'line-through' }}>
                                 {formatPrice(product.price)}
                               </span>
                             )}
@@ -240,20 +451,25 @@ export default function CataloguePage() {
       <AnimatePresence>
         {mobileFilterOpen && (
           <motion.div className="fixed inset-0 z-50 flex" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setMobileFilterOpen(false)} />
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.75)' }} onClick={() => setMobileFilterOpen(false)} />
             <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'tween', duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-72 h-full overflow-y-auto p-7" style={{ background: '#0E0C08', borderRight: '1px solid rgba(201,168,76,0.18)' }}>
+              className="relative w-80 h-full overflow-y-auto p-6"
+              style={{ background: 'var(--ys-surface)', borderRight: '1px solid var(--ys-border)' }}>
               <div className="h-[2px] absolute top-0 left-0 right-0"
-                style={{ background: 'linear-gradient(to right, #C9A84C, #E2C87A, #C9A84C)' }} />
-              <div className="flex items-center justify-between mb-8">
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, letterSpacing: '0.05em' }}>Filtres</p>
-                <button onClick={() => setMobileFilterOpen(false)} style={{ color: 'rgba(245,240,232,0.4)' }}
-                  className="hover:text-[#C9A84C] transition-colors"><FiX /></button>
+                style={{ background: 'linear-gradient(to right, var(--ys-gold), var(--ys-gold-light), var(--ys-gold))' }} />
+              <div className="flex items-center justify-between mb-6">
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, letterSpacing: '0.05em', color: 'var(--ys-text)' }}>
+                  Affiner la sélection
+                </p>
+                <button onClick={() => setMobileFilterOpen(false)} style={{ color: 'var(--ys-text-muted)' }}
+                  className="hover:text-[var(--ys-gold)] transition-colors"><FiX /></button>
               </div>
               <SidebarContent />
-              <button onClick={() => setMobileFilterOpen(false)} className="btn-victorian-filled w-full mt-4">
-                Appliquer ({filtered.length})
+              <button onClick={() => setMobileFilterOpen(false)} className="btn-victorian-filled w-full mt-6"
+                style={{ width: '100%', justifyContent: 'center' }}>
+                <FiTag style={{ fontSize: '0.7rem' }} />
+                Voir {filtered.length} pièce{filtered.length !== 1 ? 's' : ''}
               </button>
             </motion.div>
           </motion.div>

@@ -3,13 +3,45 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiShoppingCart, FiSearch, FiMenu, FiX, FiTag } from "react-icons/fi";
 import { useCart } from "@/hooks/use-cart";
+import { useTheme } from "@/hooks/use-theme";
 import logoPath from "@assets/LOGO_YS_1778428531681.png";
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      className="theme-toggle"
+      aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+      title={theme === "dark" ? "Mode clair" : "Mode sombre"}
+    >
+      <span className="theme-toggle-thumb" />
+      {/* Sun icon - visible in dark mode */}
+      <span style={{
+        position: 'absolute', right: '4px',
+        fontSize: '8px', lineHeight: 1,
+        color: 'rgba(201,168,76,0.5)',
+        transition: 'opacity 0.3s',
+        opacity: theme === 'dark' ? 1 : 0,
+      }}>☀</span>
+      {/* Moon icon - visible in light mode */}
+      <span style={{
+        position: 'absolute', left: '4px',
+        fontSize: '8px', lineHeight: 1,
+        color: 'rgba(168,114,28,0.6)',
+        transition: 'opacity 0.3s',
+        opacity: theme === 'light' ? 1 : 0,
+      }}>☾</span>
+    </button>
+  );
+}
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { totalItems } = useCart();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -23,58 +55,57 @@ export default function Navbar() {
     { label: "Promotions", href: "/promotions", highlight: true },
   ];
 
+  const isLight = theme === 'light';
+
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ${
-          isScrolled
-            ? "border-b py-3 shadow-[0_2px_40px_rgba(0,0,0,0.6)]"
-            : "py-4 md:py-5"
-        }`}
+        className="fixed top-0 left-0 w-full z-40 transition-all duration-500"
         style={{
           background: isScrolled
-            ? 'rgba(10,8,6,0.97)'
-            : 'linear-gradient(to bottom, rgba(10,8,6,0.85), transparent)',
-          borderColor: 'rgba(201,168,76,0.18)',
-          backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+            ? 'var(--ys-navbar-bg)'
+            : isLight
+              ? 'rgba(240,232,208,0.4)'
+              : 'linear-gradient(to bottom, rgba(10,8,6,0.85), transparent)',
+          borderBottom: isScrolled ? '1px solid var(--ys-border)' : 'none',
+          backdropFilter: isScrolled ? 'blur(14px)' : 'none',
+          padding: isScrolled ? '0.75rem 0' : '1.25rem 0',
+          boxShadow: isScrolled ? '0 2px 40px rgba(0,0,0,0.2)' : 'none',
         }}
       >
-        {/* Top filigree line */}
+        {/* Filigree line on scroll */}
         {isScrolled && (
-          <div className="absolute top-0 left-0 right-0 h-[1px]"
-            style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.5), transparent)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]"
+            style={{ background: `linear-gradient(to right, transparent, var(--ys-gold) 20%, var(--ys-gold-light, #E2C87A) 50%, var(--ys-gold) 80%, transparent)` }} />
         )}
 
         <div className="container mx-auto px-5 sm:px-8 relative flex items-center justify-between">
-          {/* Left nav */}
+          {/* Left */}
           <div className="flex items-center w-1/3">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden transition-colors"
-              style={{ color: 'rgba(245,240,232,0.7)' }}
+              style={{ color: 'var(--ys-text-muted)' }}
               aria-label="Menu"
             >
               <FiMenu className="text-xl" />
             </button>
             <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
               {navLinks.map(link => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative group transition-all text-[9px] tracking-[0.35em] uppercase font-medium`}
+                <Link key={link.href} href={link.href}
+                  className="relative group transition-all text-[9px] tracking-[0.35em] uppercase font-medium"
                   style={{
                     fontFamily: "'Jost', sans-serif",
                     color: link.highlight
-                      ? '#C9A84C'
+                      ? 'var(--ys-gold)'
                       : location.startsWith(link.href)
-                      ? '#C9A84C'
-                      : 'rgba(245,240,232,0.55)',
-                  }}
-                >
+                        ? 'var(--ys-gold)'
+                        : 'var(--ys-text-muted)',
+                  }}>
                   {link.highlight && <FiTag className="inline mr-1 text-[9px] -mt-0.5" />}
                   {link.label}
                   <span className="absolute -bottom-1 left-0 w-0 h-[1px] transition-all duration-400 group-hover:w-full"
-                    style={{ background: 'rgba(201,168,76,0.6)' }} />
+                    style={{ background: 'var(--ys-gold)' }} />
                 </Link>
               ))}
             </nav>
@@ -83,33 +114,31 @@ export default function Navbar() {
           {/* Center logo */}
           <div className="absolute left-1/2 -translate-x-1/2">
             <Link href="/" className="block hover:scale-105 transition-transform duration-500">
-              <img
-                src={logoPath}
-                alt="YsWatchs"
+              <img src={logoPath} alt="YsWatchs"
                 className="h-9 sm:h-10 lg:h-12 w-auto object-contain"
-                style={{ filter: 'invert(1) brightness(0.88) drop-shadow(0 0 8px rgba(201,168,76,0.3))' }}
-              />
+                style={{
+                  filter: isLight
+                    ? 'brightness(0.1) sepia(0.5) saturate(3) hue-rotate(-5deg)'
+                    : 'invert(1) brightness(0.88) drop-shadow(0 0 8px rgba(201,168,76,0.3))',
+                }} />
             </Link>
           </div>
 
-          {/* Right icons */}
-          <div className="flex items-center justify-end gap-5 w-1/3">
-            <Link href="/recherche" style={{ color: 'rgba(245,240,232,0.55)' }}
-              className="hover:text-[#C9A84C] transition-colors" aria-label="Recherche">
+          {/* Right */}
+          <div className="flex items-center justify-end gap-4 w-1/3">
+            <ThemeToggle />
+            <Link href="/recherche" className="hover:text-[var(--ys-gold)] transition-colors"
+              style={{ color: 'var(--ys-text-muted)' }} aria-label="Recherche">
               <FiSearch className="text-lg" />
             </Link>
-            <Link href="/panier" style={{ color: 'rgba(245,240,232,0.55)' }}
-              className="hover:text-[#C9A84C] transition-colors relative" aria-label="Panier">
+            <Link href="/panier" className="hover:text-[var(--ys-gold)] transition-colors relative"
+              style={{ color: 'var(--ys-text-muted)' }} aria-label="Panier">
               <FiShoppingCart className="text-lg" />
               <AnimatePresence>
                 {totalItems > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-2 -right-2 text-[#0C0A08] text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
-                    style={{ background: '#C9A84C' }}
-                  >
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                    className="absolute -top-2 -right-2 text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--ys-gold)', color: 'var(--ys-bg)' }}>
                     {totalItems}
                   </motion.span>
                 )}
@@ -128,23 +157,28 @@ export default function Navbar() {
             exit={{ opacity: 0, x: "-100%" }}
             transition={{ type: "tween", duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-50 flex flex-col"
-            style={{ background: '#0A0806' }}
+            style={{ background: 'var(--ys-bg)' }}
           >
-            {/* Top border */}
             <div className="h-[2px]" style={{
-              background: 'linear-gradient(to right, transparent, #C9A84C 20%, #E2C87A 50%, #C9A84C 80%, transparent)'
+              background: 'linear-gradient(to right, transparent, var(--ys-gold) 20%, var(--ys-gold-light, #E2C87A) 50%, var(--ys-gold) 80%, transparent)'
             }} />
-
             <div className="flex justify-between items-center px-7 py-5"
-              style={{ borderBottom: '1px solid rgba(201,168,76,0.18)' }}>
+              style={{ borderBottom: '1px solid var(--ys-border)' }}>
               <img src={logoPath} alt="YsWatchs" className="h-9 w-auto object-contain"
-                style={{ filter: 'invert(1) brightness(0.88) drop-shadow(0 0 6px rgba(201,168,76,0.3))' }} />
-              <button onClick={() => setIsMobileMenuOpen(false)}
-                style={{ color: 'rgba(245,240,232,0.5)' }} className="hover:text-[#C9A84C] transition-colors">
-                <FiX className="text-xl" />
-              </button>
+                style={{
+                  filter: isLight
+                    ? 'brightness(0.1) sepia(0.5) saturate(3) hue-rotate(-5deg)'
+                    : 'invert(1) brightness(0.88)',
+                }} />
+              <div className="flex items-center gap-4">
+                <ThemeToggle />
+                <button onClick={() => setIsMobileMenuOpen(false)}
+                  style={{ color: 'var(--ys-text-muted)' }}
+                  className="hover:text-[var(--ys-gold)] transition-colors">
+                  <FiX className="text-xl" />
+                </button>
+              </div>
             </div>
-
             <div className="flex flex-col justify-center flex-1 px-8 gap-1">
               {[...navLinks,
                 { label: "Recherche", href: "/recherche" },
@@ -161,21 +195,21 @@ export default function Navbar() {
                       fontSize: 'clamp(2.2rem, 8vw, 3.5rem)',
                       fontWeight: 300,
                       letterSpacing: '0.03em',
-                      color: 'highlight' in link && link.highlight ? '#C9A84C' : 'rgba(245,240,232,0.8)',
-                      borderBottom: '1px solid rgba(201,168,76,0.12)',
+                      color: 'highlight' in link && link.highlight ? 'var(--ys-gold)' : 'var(--ys-text)',
+                      borderBottom: '1px solid var(--ys-border)',
                     }}>
                     {link.label}
                   </Link>
                 </motion.div>
               ))}
             </div>
-
             <div className="px-8 pb-10" style={{
               fontFamily: "'Jost', sans-serif",
               fontSize: '0.55rem',
               letterSpacing: '0.45em',
               textTransform: 'uppercase',
-              color: 'rgba(201,168,76,0.3)'
+              color: 'var(--ys-gold)',
+              opacity: 0.35,
             }}>
               Maison YsWatchs · Maroc · Est. MMXXIV
             </div>

@@ -8,39 +8,86 @@
 @theme {
   --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   --font-sans: 'Jost', Georgia, sans-serif;
-
   --color-background:  #0C0A08;
   --color-surface:     #141009;
-  --color-surface-2:   #1C160C;
-  --color-surface-3:   #241D11;
   --color-foreground:  #F5F0E8;
-  --color-muted:       #9A8A78;
-  --color-dim:         #5A4E42;
   --color-primary:     #C9A84C;
-  --color-primary-light: #E2C87A;
-  --color-gold-dim:    rgba(201,168,76,0.15);
-  --color-bordeaux:    #4A0E0E;
   --color-border:      rgba(201,168,76,0.22);
-  --color-cream:       #F5F0E8;
-
   --radius: 0px;
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;
 }
 
-/* ─── Reset ──────────────────────────────────────────── */
+/* ─── CSS custom properties (overridable by light mode) ─ */
+:root {
+  --ys-bg:           #0C0A08;
+  --ys-bg-deep:      #09070A;
+  --ys-surface:      #141009;
+  --ys-surface-2:    #1C160C;
+  --ys-surface-3:    #241D11;
+  --ys-text:         #F5F0E8;
+  --ys-text-muted:   rgba(245,240,232,0.45);
+  --ys-text-dim:     rgba(245,240,232,0.22);
+  --ys-gold:         #C9A84C;
+  --ys-gold-light:   #E2C87A;
+  --ys-gold-dim:     rgba(201,168,76,0.18);
+  --ys-gold-glow:    rgba(201,168,76,0.08);
+  --ys-border:       rgba(201,168,76,0.22);
+  --ys-border-hover: rgba(201,168,76,0.52);
+  --ys-input-bg:     #0E0C08;
+  --ys-card-bg:      #141009;
+  --ys-watch-bg:     #0E0C08;
+  --ys-hero-overlay: linear-gradient(to bottom, rgba(8,6,10,0.55) 0%, transparent 35%, rgba(8,6,10,0.9) 85%, #0C0A08 100%);
+  --ys-marquee-bg:   #0A0806;
+  --ys-navbar-bg:    rgba(10,8,6,0.97);
+  --ys-shadow:       0 20px 50px rgba(0,0,0,0.5);
+  --ys-img-filter:   drop-shadow(0 12px 40px rgba(0,0,0,0.7));
+  --ys-grain-opacity: 0.028;
+  --ys-scrollbar-track: #0C0A08;
+}
+
+/* ─── LIGHT MODE overrides ──────────────────────────────── */
+.light-mode {
+  --ys-bg:           #F0E8D0;
+  --ys-bg-deep:      #E8DCC0;
+  --ys-surface:      #EAE0C8;
+  --ys-surface-2:    #E2D6B8;
+  --ys-surface-3:    #D8CAAA;
+  --ys-text:         #1A1208;
+  --ys-text-muted:   rgba(26,18,8,0.55);
+  --ys-text-dim:     rgba(26,18,8,0.3);
+  --ys-gold:         #A8721C;
+  --ys-gold-light:   #C9902E;
+  --ys-gold-dim:     rgba(168,114,28,0.2);
+  --ys-gold-glow:    rgba(168,114,28,0.1);
+  --ys-border:       rgba(168,114,28,0.3);
+  --ys-border-hover: rgba(168,114,28,0.65);
+  --ys-input-bg:     #E0D4B4;
+  --ys-card-bg:      #EAE0C8;
+  --ys-watch-bg:     #E4D8B8;
+  --ys-hero-overlay: linear-gradient(to bottom, rgba(240,232,208,0.3) 0%, transparent 35%, rgba(240,232,208,0.8) 85%, #F0E8D0 100%);
+  --ys-marquee-bg:   #E4D8B8;
+  --ys-navbar-bg:    rgba(240,232,208,0.97);
+  --ys-shadow:       0 20px 50px rgba(0,0,0,0.15);
+  --ys-img-filter:   drop-shadow(0 12px 40px rgba(0,0,0,0.25));
+  --ys-grain-opacity: 0.018;
+  --ys-scrollbar-track: #F0E8D0;
+}
+
+/* ─── Reset ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Jost', sans-serif;
   font-weight: 300;
-  background-color: #0C0A08;
-  color: #F5F0E8;
+  background-color: var(--ys-bg);
+  color: var(--ys-text);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   letter-spacing: 0.01em;
+  transition: background-color 0.45s ease, color 0.45s ease;
 }
 
 /* Grain texture overlay */
@@ -50,34 +97,29 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.028;
+  opacity: var(--ys-grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0C0A08; }
-::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); }
-::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.5); }
-::selection { background: rgba(201,168,76,0.2); color: #F5F0E8; }
+::-webkit-scrollbar-track { background: var(--ys-scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--ys-border); }
+::-webkit-scrollbar-thumb:hover { background: var(--ys-border-hover); }
+::selection { background: var(--ys-gold-dim); color: var(--ys-text); }
 
 /* ─── Typography ─────────────────────────────────────── */
 h1, h2, h3, h4 {
   font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   font-weight: 300;
-  color: #F5F0E8;
+  color: var(--ys-text);
+  transition: color 0.45s;
 }
 
 /* ─── Gold gradient text ─────────────────────────────── */
-.gold-text {
-  background: linear-gradient(135deg, #C9A84C 0%, #E8D080 40%, #C9A84C 70%, #A8872E 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.gold-gradient-text { /* alias */
-  background: linear-gradient(135deg, #C9A84C 0%, #E8D080 40%, #C9A84C 70%, #A8872E 100%);
+.gold-text, .gold-gradient-text {
+  background: linear-gradient(135deg, var(--ys-gold) 0%, var(--ys-gold-light) 40%, var(--ys-gold) 70%, #8A6018 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -85,49 +127,49 @@ h1, h2, h3, h4 {
 
 /* ─── Victorian card ─────────────────────────────────── */
 .card-victorian {
-  background: #141009;
-  border: 1px solid rgba(201,168,76,0.22);
+  background: var(--ys-card-bg);
+  border: 1px solid var(--ys-border);
   position: relative;
-  transition: border-color 0.45s, box-shadow 0.45s, transform 0.45s;
+  transition: border-color 0.45s, box-shadow 0.45s, transform 0.45s, background-color 0.45s;
 }
 .card-victorian::before,
 .card-victorian::after {
   content: '❧';
   position: absolute;
   font-size: 0.85rem;
-  color: rgba(201,168,76,0.25);
+  color: var(--ys-gold-dim);
   line-height: 1;
   transition: color 0.45s;
 }
 .card-victorian::before { top: 5px; left: 7px; }
 .card-victorian::after  { bottom: 5px; right: 7px; transform: rotate(180deg); }
-
 .card-victorian:hover {
-  border-color: rgba(201,168,76,0.5);
-  box-shadow: 0 0 30px rgba(201,168,76,0.07), 0 20px 50px rgba(0,0,0,0.5);
+  border-color: var(--ys-border-hover);
+  box-shadow: 0 0 30px var(--ys-gold-glow), var(--ys-shadow);
   transform: translateY(-4px);
 }
 .card-victorian:hover::before,
-.card-victorian:hover::after { color: rgba(201,168,76,0.55); }
+.card-victorian:hover::after { color: var(--ys-border-hover); }
 
-/* product-card-hover alias */
+/* product-card-hover */
 .product-card-hover {
-  background: #141009;
-  border: 1px solid rgba(201,168,76,0.22);
+  background: var(--ys-card-bg);
+  border: 1px solid var(--ys-border);
   position: relative;
-  transition: border-color 0.45s, box-shadow 0.45s, transform 0.45s;
+  transition: border-color 0.45s, box-shadow 0.45s, transform 0.45s, background-color 0.45s;
 }
 .product-card-hover:hover {
-  border-color: rgba(201,168,76,0.5);
-  box-shadow: 0 0 30px rgba(201,168,76,0.07), 0 20px 50px rgba(0,0,0,0.5);
+  border-color: var(--ys-border-hover);
+  box-shadow: 0 0 30px var(--ys-gold-glow), var(--ys-shadow);
   transform: translateY(-4px);
 }
 
-/* ─── Watch display container ────────────────────────── */
+/* ─── Watch display ──────────────────────────────────── */
 .watch-display {
-  background: #0E0C08;
+  background: var(--ys-watch-bg);
   position: relative;
   overflow: hidden;
+  transition: background-color 0.45s;
 }
 .watch-display::before {
   content: '';
@@ -143,7 +185,7 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: rgba(201,168,76,0.4);
+  color: var(--ys-gold-dim);
   font-size: 0.65rem;
   letter-spacing: 0.35em;
 }
@@ -152,7 +194,7 @@ h1, h2, h3, h4 {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(201,168,76,0.35), transparent);
+  background: linear-gradient(to right, transparent, var(--ys-border), transparent);
 }
 
 /* ─── Victorian label ────────────────────────────────── */
@@ -162,37 +204,22 @@ h1, h2, h3, h4 {
   font-size: 0.6rem;
   letter-spacing: 0.5em;
   text-transform: uppercase;
-  color: rgba(201,168,76,0.75);
+  color: var(--ys-gold);
+  opacity: 0.75;
 }
 
-/* ─── Filigree top border ────────────────────────────── */
-.filigree-top::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(to right, transparent 0%, #C9A84C 20%, #E2C87A 50%, #C9A84C 80%, transparent 100%);
+/* ─── VR gold rule ───────────────────────────────────── */
+.vr-gold {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--ys-border), transparent);
 }
-
-/* ─── Corner ornament ────────────────────────────────── */
-.corner-ornament {
-  position: relative;
-}
-.corner-ornament::before, .corner-ornament::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  border-color: rgba(201,168,76,0.4);
-  border-style: solid;
-}
-.corner-ornament::before { top: 0; left: 0;  border-width: 1px 0 0 1px; }
-.corner-ornament::after  { top: 0; right: 0; border-width: 1px 1px 0 0; }
 
 /* ─── Victorian buttons ──────────────────────────────── */
 .btn-victorian {
   background: transparent;
-  border: 1px solid rgba(201,168,76,0.45);
-  color: #C9A84C;
+  border: 1px solid var(--ys-border-hover);
+  color: var(--ys-gold);
   font-family: 'Jost', sans-serif;
   font-weight: 400;
   letter-spacing: 0.35em;
@@ -209,15 +236,15 @@ h1, h2, h3, h4 {
   gap: 0.5rem;
 }
 .btn-victorian:hover {
-  border-color: #C9A84C;
-  color: #E8D080;
-  box-shadow: 0 0 20px rgba(201,168,76,0.12), inset 0 0 15px rgba(201,168,76,0.04);
+  border-color: var(--ys-gold);
+  color: var(--ys-gold-light);
+  box-shadow: 0 0 20px var(--ys-gold-glow), inset 0 0 15px var(--ys-gold-glow);
 }
 
 .btn-victorian-filled {
-  background: linear-gradient(135deg, #C9A84C, #A8872E);
-  border: 1px solid rgba(201,168,76,0.7);
-  color: #0C0A08;
+  background: linear-gradient(135deg, var(--ys-gold), #8A6018);
+  border: 1px solid var(--ys-gold);
+  color: var(--ys-bg);
   font-family: 'Jost', sans-serif;
   font-weight: 500;
   letter-spacing: 0.25em;
@@ -232,37 +259,37 @@ h1, h2, h3, h4 {
   gap: 0.5rem;
 }
 .btn-victorian-filled:hover {
-  background: linear-gradient(135deg, #E8D080, #C9A84C);
-  box-shadow: 0 0 30px rgba(201,168,76,0.25);
+  background: linear-gradient(135deg, var(--ys-gold-light), var(--ys-gold));
+  box-shadow: 0 0 30px var(--ys-gold-dim);
 }
 
 /* ─── Input ──────────────────────────────────────────── */
 .input-victorian {
-  background: #0E0C08;
-  border: 1px solid rgba(201,168,76,0.22);
-  color: #F5F0E8;
+  background: var(--ys-input-bg);
+  border: 1px solid var(--ys-border);
+  color: var(--ys-text);
   font-family: 'Jost', sans-serif;
   font-size: 0.875rem;
   font-weight: 300;
   padding: 0.75rem 1rem;
   width: 100%;
   outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.45s, color 0.45s;
 }
-.input-victorian::placeholder { color: #5A4E42; }
+.input-victorian::placeholder { color: var(--ys-text-dim); }
 .input-victorian:focus {
-  border-color: rgba(201,168,76,0.5);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.05);
+  border-color: var(--ys-border-hover);
+  box-shadow: 0 0 0 3px var(--ys-gold-glow);
 }
-.input-victorian option { background: #141009; color: #F5F0E8; }
+.input-victorian option { background: var(--ys-card-bg); color: var(--ys-text); }
 
 /* ─── Promo badge ────────────────────────────────────── */
 .promo-badge {
   animation: promo-pulse 2.8s ease-in-out infinite;
 }
 @keyframes promo-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
-  50%       { box-shadow: 0 0 12px 3px rgba(201,168,76,0.4); }
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: 0 0 12px 3px var(--ys-gold-dim); }
 }
 
 /* ─── Marquee ────────────────────────────────────────── */
@@ -273,16 +300,13 @@ h1, h2, h3, h4 {
 .marquee-track { animation: marquee-scroll 35s linear infinite; }
 .marquee-track:hover { animation-play-state: paused; }
 
-/* ─── Gear decoration ────────────────────────────────── */
-@keyframes gear-rotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-.gear-spin       { animation: gear-rotate 18s linear infinite; }
-.gear-spin-slow  { animation: gear-rotate 35s linear infinite reverse; }
-.gear-spin-med   { animation: gear-rotate 25s linear infinite; }
+/* ─── Gear ───────────────────────────────────────────── */
+@keyframes gear-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.gear-spin      { animation: gear-rotate 18s linear infinite; }
+.gear-spin-slow { animation: gear-rotate 35s linear infinite reverse; }
+.gear-spin-med  { animation: gear-rotate 25s linear infinite; }
 
-/* ─── Fade-up animations ─────────────────────────────── */
+/* ─── Fade-up ────────────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -293,40 +317,22 @@ h1, h2, h3, h4 {
 .fade-up-3 { animation-delay: 0.5s; opacity: 0; }
 .fade-up-4 { animation-delay: 0.7s; opacity: 0; }
 
-/* ─── Amber/candlelight glow effect ─────────────────── */
-.candle-glow {
-  background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(201,168,76,0.1) 0%, rgba(201,168,76,0.03) 45%, transparent 70%);
-}
-
-/* ─── VR gold rule ───────────────────────────────────── */
-.vr-gold {
-  border: none;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(201,168,76,0.38), transparent);
-}
-
-/* ─── Hero pattern (SVG gear outlines) ──────────────── */
-.hero-gear-bg {
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(201,168,76,0.07) 0%, transparent 55%),
-    linear-gradient(to bottom, rgba(12,10,8,0.6) 0%, transparent 40%, rgba(12,10,8,0.85) 80%, #0C0A08 100%);
-}
-
-/* ─── Sidebar filter ─────────────────────────────────── */
+/* ─── Filter sidebar ─────────────────────────────────── */
 .filter-checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 14px; height: 14px;
-  border: 1px solid rgba(201,168,76,0.35);
-  background: #0E0C08;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--ys-border-hover);
+  background: var(--ys-input-bg);
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
   transition: border-color 0.25s, background 0.25s;
+  border-radius: 0;
 }
 .filter-checkbox:checked {
-  background: #C9A84C;
-  border-color: #C9A84C;
+  background: var(--ys-gold);
+  border-color: var(--ys-gold);
 }
 .filter-checkbox:checked::after {
   content: '✓';
@@ -335,7 +341,49 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
-  color: #0C0A08;
+  font-size: 10px;
+  color: var(--ys-bg);
   font-weight: 700;
 }
+
+/* ─── Theme toggle button ────────────────────────────── */
+.theme-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid var(--ys-border-hover);
+  background: var(--ys-surface-2, var(--ys-surface));
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+.theme-toggle:hover {
+  border-color: var(--ys-gold);
+  box-shadow: 0 0 8px var(--ys-gold-glow);
+}
+.theme-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ys-gold), var(--ys-gold-light));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: absolute;
+  left: 2px;
+}
+.light-mode .theme-toggle-thumb {
+  transform: translateX(18px);
+}
+
+/* ─── Clock glow ring ────────────────────────────────── */
+@keyframes clock-glow {
+  0%, 100% { filter: drop-shadow(0 0 18px rgba(201,168,76,0.2)) drop-shadow(0 8px 32px rgba(0,0,0,0.5)); }
+  50%       { filter: drop-shadow(0 0 28px rgba(201,168,76,0.38)) drop-shadow(0 8px 32px rgba(0,0,0,0.5)); }
+}
+.clock-container { animation: clock-glow 4s ease-in-out infinite; }
+
+/* Light mode clock face */
+.light-mode .clock-face { fill: url(#face-light) !important; }

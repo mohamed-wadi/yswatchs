@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/hooks/use-cart";
+import { ThemeProvider } from "@/hooks/use-theme";
 import SplashScreen from "@/components/SplashScreen";
 import HomePage from "@/pages/home";
 import CataloguePage from "@/pages/catalogue";
@@ -42,16 +43,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CartProvider>
-          {showSplash && (
-            <SplashScreen onComplete={() => setShowSplash(false)} />
-          )}
-          <div className="noise-overlay" aria-hidden="true" />
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            {showSplash && (
+              <SplashScreen onComplete={() => setShowSplash(false)} />
+            )}
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </CartProvider>
+        </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
