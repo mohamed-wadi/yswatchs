@@ -51,69 +51,70 @@
 }
 
 :root {
-  --button-outline: rgba(201, 168, 76, 0.2);
+  --button-outline: rgba(201, 168, 76, 0.25);
   --badge-outline: rgba(201, 168, 76, 0.2);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(201, 168, 76, 0.05);
-  --elevate-2: rgba(201, 168, 76, 0.1);
+  --elevate-1: rgba(201, 168, 76, 0.04);
+  --elevate-2: rgba(201, 168, 76, 0.08);
 
-  --background: 0 0% 4%;
-  --foreground: 36 33% 94%;
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
+  /* Light luxury theme — warm ivory/cream */
+  --background: 36 28% 97%;
+  --foreground: 28 18% 13%;
+  --border: 36 22% 86%;
+  --input: 36 22% 90%;
   --ring: 43 53% 54%;
 
-  --card: 0 0% 10%;
-  --card-foreground: 36 33% 94%;
-  --card-border: 0 0% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 28 18% 13%;
+  --card-border: 36 22% 88%;
 
-  --sidebar: 0 0% 7%;
-  --sidebar-foreground: 36 33% 94%;
-  --sidebar-border: 0 0% 15%;
+  --sidebar: 36 20% 95%;
+  --sidebar-foreground: 28 18% 13%;
+  --sidebar-border: 36 22% 86%;
   --sidebar-primary: 43 53% 54%;
-  --sidebar-primary-foreground: 0 0% 0%;
-  --sidebar-accent: 0 0% 12%;
-  --sidebar-accent-foreground: 36 33% 94%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 36 20% 92%;
+  --sidebar-accent-foreground: 28 18% 13%;
   --sidebar-ring: 43 53% 54%;
 
-  --popover: 0 0% 8%;
-  --popover-foreground: 36 33% 94%;
-  --popover-border: 0 0% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 28 18% 13%;
+  --popover-border: 36 22% 86%;
 
   --primary: 43 53% 54%;
-  --primary-foreground: 0 0% 0%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 36 33% 94%;
+  --secondary: 36 22% 92%;
+  --secondary-foreground: 28 18% 13%;
 
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 60%;
+  --muted: 36 22% 93%;
+  --muted-foreground: 28 10% 45%;
 
   --accent: 43 53% 54%;
-  --accent-foreground: 0 0% 0%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 80% 50%;
+  --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
 
   --chart-1: 43 53% 54%;
-  --chart-2: 36 33% 70%;
-  --chart-3: 0 0% 40%;
-  --chart-4: 43 40% 40%;
-  --chart-5: 0 0% 25%;
+  --chart-2: 36 33% 60%;
+  --chart-3: 28 15% 40%;
+  --chart-4: 43 40% 70%;
+  --chart-5: 28 10% 75%;
 
   --app-font-sans: 'Jost', sans-serif;
   --app-font-serif: 'Cormorant Garamond', serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0rem;
 
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.4);
-  --shadow-xs: 0px 2px 4px 0px rgba(0,0,0,0.4);
-  --shadow-sm: 0px 2px 8px 0px rgba(0,0,0,0.5);
-  --shadow: 0px 4px 16px 0px rgba(0,0,0,0.5);
-  --shadow-md: 0px 8px 24px 0px rgba(0,0,0,0.6);
-  --shadow-lg: 0px 12px 40px 0px rgba(0,0,0,0.7);
-  --shadow-xl: 0px 20px 60px 0px rgba(0,0,0,0.8);
-  --shadow-2xl: 0px 24px 80px 0px rgba(0,0,0,0.9);
+  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.06);
+  --shadow-xs: 0px 2px 4px 0px rgba(0,0,0,0.07);
+  --shadow-sm: 0px 2px 8px 0px rgba(0,0,0,0.08);
+  --shadow: 0px 4px 16px 0px rgba(0,0,0,0.09);
+  --shadow-md: 0px 8px 24px 0px rgba(0,0,0,0.1);
+  --shadow-lg: 0px 12px 40px 0px rgba(0,0,0,0.12);
+  --shadow-xl: 0px 20px 60px 0px rgba(0,0,0,0.14);
+  --shadow-2xl: 0px 24px 80px 0px rgba(0,0,0,0.16);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -124,43 +125,6 @@
   --muted-border: hsl(var(--muted));
   --accent-border: hsl(var(--accent));
   --destructive-border: hsl(var(--destructive));
-}
-
-.dark {
-  --background: 0 0% 4%;
-  --foreground: 36 33% 94%;
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 43 53% 54%;
-  --card: 0 0% 10%;
-  --card-foreground: 36 33% 94%;
-  --card-border: 0 0% 20%;
-  --sidebar: 0 0% 7%;
-  --sidebar-foreground: 36 33% 94%;
-  --sidebar-border: 0 0% 15%;
-  --sidebar-primary: 43 53% 54%;
-  --sidebar-primary-foreground: 0 0% 0%;
-  --sidebar-accent: 0 0% 12%;
-  --sidebar-accent-foreground: 36 33% 94%;
-  --sidebar-ring: 43 53% 54%;
-  --popover: 0 0% 8%;
-  --popover-foreground: 36 33% 94%;
-  --popover-border: 0 0% 15%;
-  --primary: 43 53% 54%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 36 33% 94%;
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 60%;
-  --accent: 43 53% 54%;
-  --accent-foreground: 0 0% 0%;
-  --destructive: 0 80% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --button-outline: rgba(201, 168, 76, 0.15);
-  --badge-outline: rgba(201, 168, 76, 0.1);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(201, 168, 76, 0.04);
-  --elevate-2: rgba(201, 168, 76, 0.09);
 }
 
 @layer base {
@@ -175,23 +139,9 @@
   }
 }
 
-/* Grain / noise texture overlay */
-.noise-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
-
 /* Gold gradient text */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #b8922a 0%, #e6c875 40%, #c9a84c 60%, #f0d98a 100%);
+  background: linear-gradient(135deg, #a8781e 0%, #d4a843 40%, #c9a84c 60%, #e8c96e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -204,7 +154,7 @@
 }
 
 .shimmer-gold {
-  background: linear-gradient(90deg, #c9a84c 0%, #e6c875 25%, #fff8e1 50%, #e6c875 75%, #c9a84c 100%);
+  background: linear-gradient(90deg, #c9a84c 0%, #e6c875 25%, #f5e4a8 50%, #e6c875 75%, #c9a84c 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -219,22 +169,47 @@
 }
 
 .marquee-track {
-  animation: marquee 30s linear infinite;
+  animation: marquee 35s linear infinite;
   white-space: nowrap;
 }
-
 .marquee-track:hover {
   animation-play-state: paused;
 }
 
-/* Product card hover gold glow */
+/* Product card hover */
 .product-card-hover {
   transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
 }
 .product-card-hover:hover {
-  border-color: rgba(201, 168, 76, 0.5);
-  box-shadow: 0 0 30px rgba(201, 168, 76, 0.08), 0 20px 60px rgba(0,0,0,0.5);
+  border-color: rgba(201, 168, 76, 0.45);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(201,168,76,0.15);
   transform: translateY(-4px);
+}
+
+/* Noise grain overlay — subtle on light bg */
+.noise-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* Image zoom container */
+.zoom-container {
+  overflow: hidden;
+  position: relative;
+  cursor: zoom-in;
+}
+.zoom-container img {
+  transition: transform 0.1s ease;
+  transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+}
+.zoom-container.zoomed img {
+  transform: scale(2.2);
 }
 
 @layer utilities {

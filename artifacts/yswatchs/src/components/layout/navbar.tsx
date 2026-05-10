@@ -28,59 +28,68 @@ export default function Navbar() {
       <header
         className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ease-out ${
           isScrolled
-            ? "bg-black/85 backdrop-blur-md border-b border-[rgba(201,168,76,0.15)] py-3 shadow-[0_4px_40px_rgba(0,0,0,0.9)]"
-            : "bg-transparent py-5"
+            ? "bg-white/90 backdrop-blur-md border-b border-[#c9a84c]/20 py-3 shadow-[0_2px_30px_rgba(0,0,0,0.06)]"
+            : "bg-transparent py-4 md:py-5"
         }`}
       >
-        <div className="container mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4 lg:hidden">
+        <div className="container mx-auto px-4 sm:px-6 relative flex items-center justify-between">
+
+          {/* Left: desktop nav | mobile hamburger */}
+          <div className="flex items-center w-1/3">
             <button
               data-testid="button-mobile-menu"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="text-foreground hover:text-primary transition-colors"
+              className="text-foreground hover:text-primary transition-colors lg:hidden"
+              aria-label="Menu"
             >
               <FiMenu className="text-2xl" />
             </button>
+            <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  data-testid={`link-nav-${link.label.toLowerCase()}`}
+                  className={`text-xs tracking-[0.25em] uppercase font-medium transition-all hover:text-primary relative group ${
+                    location.startsWith(link.href) ? "text-primary" : "text-foreground/60"
+                  }`}
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-primary transition-all duration-300 group-hover:w-full" />
+                </Link>
+              ))}
+            </nav>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-10 w-1/3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                data-testid={`link-nav-${link.label.toLowerCase()}`}
-                className={`text-xs tracking-[0.25em] uppercase font-medium transition-all hover:text-primary relative group ${
-                  location.startsWith(link.href) ? "text-primary" : "text-foreground/70"
-                }`}
-              >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-primary transition-all duration-300 group-hover:w-full" />
-              </Link>
-            ))}
-          </nav>
-
-          <div className="w-1/3 flex justify-center">
-            <Link href="/" data-testid="link-logo">
+          {/* Center: logo — absolutely centered on all screen sizes */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+            <Link href="/" data-testid="link-logo" className="flex items-center">
               <img
                 src={logoPath}
                 alt="YsWatchs"
-                className="h-10 lg:h-12 w-auto object-contain invert brightness-90 drop-shadow-[0_0_12px_rgba(201,168,76,0.5)] hover:drop-shadow-[0_0_20px_rgba(201,168,76,0.8)] transition-all duration-500 hover:scale-105"
+                className="h-9 sm:h-10 lg:h-12 w-auto object-contain hover:scale-105 transition-all duration-500"
+                style={{
+                  filter: 'brightness(0.2) sepia(0.4) saturate(3) hue-rotate(5deg)',
+                }}
               />
             </Link>
           </div>
 
-          <div className="w-1/3 flex items-center justify-end gap-6">
+          {/* Right: search + cart */}
+          <div className="flex items-center justify-end gap-5 w-1/3">
             <Link
               href="/recherche"
               data-testid="link-search"
-              className="text-foreground/70 hover:text-primary transition-colors hidden sm:block"
+              className="text-foreground/60 hover:text-primary transition-colors"
+              aria-label="Recherche"
             >
               <FiSearch className="text-xl" />
             </Link>
             <Link
               href="/panier"
               data-testid="link-cart"
-              className="text-foreground/70 hover:text-primary transition-colors relative"
+              className="text-foreground/60 hover:text-primary transition-colors relative"
+              aria-label="Panier"
             >
               <FiShoppingCart className="text-xl" />
               <AnimatePresence>
@@ -90,7 +99,7 @@ export default function Navbar() {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     data-testid="badge-cart-count"
-                    className="absolute -top-2 -right-2 bg-primary text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                    className="absolute -top-2 -right-2 bg-primary text-white text-[9px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center"
                   >
                     {totalItems}
                   </motion.span>
@@ -101,52 +110,84 @@ export default function Navbar() {
         </div>
       </header>
 
+      {/* Mobile fullscreen menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/97 z-50 backdrop-blur-2xl flex flex-col"
+            initial={{ opacity: 0, x: "-100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "-100%" }}
+            transition={{ type: "tween", duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 bg-[#FAF8F3] z-50 flex flex-col"
           >
-            <div className="flex justify-between items-center p-6">
-              <img src={logoPath} alt="YsWatchs" className="h-10 w-auto object-contain invert brightness-90" />
+            <div className="flex justify-between items-center px-6 py-5 border-b border-[#c9a84c]/20">
+              <img
+                src={logoPath}
+                alt="YsWatchs"
+                className="h-9 w-auto object-contain"
+                style={{ filter: 'brightness(0.2) sepia(0.4) saturate(3) hue-rotate(5deg)' }}
+              />
               <button
                 data-testid="button-close-mobile-menu"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-foreground hover:text-primary transition-colors"
+                className="text-foreground/60 hover:text-primary transition-colors"
               >
-                <FiX className="text-3xl" />
+                <FiX className="text-2xl" />
               </button>
             </div>
 
-            <div className="flex flex-col items-center justify-center flex-1 gap-10">
+            <div className="flex flex-col justify-center flex-1 px-8 gap-2">
               {navLinks.map((link, i) => (
                 <motion.div
                   key={link.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.07 + 0.1 }}
                 >
                   <Link
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="font-serif text-5xl tracking-widest hover:text-primary transition-colors"
+                    className={`block font-serif text-5xl sm:text-6xl font-light py-3 border-b border-[#c9a84c]/15 hover:text-primary transition-colors ${
+                      location.startsWith(link.href) ? "text-primary" : "text-foreground"
+                    }`}
                   >
                     {link.label}
                   </Link>
                 </motion.div>
               ))}
-              <div className="w-16 h-[1px] bg-primary/40 my-2" />
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 }}
+              >
                 <Link
                   href="/recherche"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="font-serif text-2xl tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                  className="block font-serif text-3xl sm:text-4xl font-light py-3 text-foreground/40 hover:text-primary transition-colors border-b border-[#c9a84c]/10"
                 >
                   Recherche
                 </Link>
               </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.42 }}
+              >
+                <Link
+                  href="/panier"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block font-serif text-3xl sm:text-4xl font-light py-3 text-foreground/40 hover:text-primary transition-colors"
+                >
+                  Panier
+                  {totalItems > 0 && (
+                    <span className="ml-3 text-sm text-primary">({totalItems})</span>
+                  )}
+                </Link>
+              </motion.div>
+            </div>
+
+            <div className="px-8 pb-10 text-[10px] tracking-[0.4em] uppercase text-foreground/30">
+              L'Art du Temps
             </div>
           </motion.div>
         )}

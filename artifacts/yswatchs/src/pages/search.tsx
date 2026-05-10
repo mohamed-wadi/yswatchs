@@ -5,6 +5,8 @@ import { FiSearch, FiX } from "react-icons/fi";
 import { products, formatPrice } from "@/lib/data";
 import Navbar from "@/components/layout/navbar";
 
+const suggestions = ["Herbelin", "Tissot", "Or", "Acier", "Bleu", "Homme", "Femme"];
+
 export default function SearchPage() {
   const [query, setQuery] = useState("");
 
@@ -20,17 +22,17 @@ export default function SearchPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
-      <div className="pt-32 pb-28 px-6">
+      <div className="pt-28 sm:pt-32 pb-24 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-16"
+            className="mb-12 sm:mb-16"
           >
-            <p className="text-[9px] tracking-[0.5em] uppercase text-[#c9a84c]/70 mb-6">Recherche</p>
-            <h1 className="font-serif font-light text-5xl mb-10">Trouver une pièce</h1>
+            <p className="text-[9px] tracking-[0.5em] uppercase text-[#c9a84c]/70 mb-5">Recherche</p>
+            <h1 className="font-serif font-light text-4xl sm:text-5xl mb-8 sm:mb-10">Trouver une pièce</h1>
 
-            <div className="relative border-b border-[rgba(255,255,255,0.15)] focus-within:border-[#c9a84c]/60 transition-colors">
+            <div className="relative border-b-2 border-border focus-within:border-[#c9a84c]/50 transition-colors">
               <FiSearch className="absolute left-0 top-1/2 -translate-y-1/2 text-foreground/30 text-xl" />
               <input
                 data-testid="input-search"
@@ -38,14 +40,14 @@ export default function SearchPage() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Nom, collection, catégorie..."
-                className="w-full bg-transparent pl-8 pr-10 py-5 text-xl font-serif text-foreground placeholder-foreground/20 focus:outline-none"
+                className="w-full bg-transparent pl-8 pr-10 py-4 sm:py-5 text-lg sm:text-xl font-serif text-foreground placeholder-foreground/20 focus:outline-none"
                 autoFocus
               />
               {query && (
                 <button
                   data-testid="button-clear-search"
                   onClick={() => setQuery("")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground/70 transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground/60 transition-colors"
                 >
                   <FiX />
                 </button>
@@ -65,26 +67,26 @@ export default function SearchPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                <p className="text-[9px] tracking-[0.4em] uppercase text-foreground/30 mb-8">
+                <p className="text-[9px] tracking-[0.4em] uppercase text-foreground/30 mb-7">
                   {results.length} résultat{results.length > 1 ? 's' : ''} pour "{query}"
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   {results.map(product => (
                     <Link key={product.id} href={`/produit/${product.id}`} data-testid={`result-product-${product.id}`}>
-                      <div className="group flex gap-5 border border-[rgba(255,255,255,0.06)] bg-card p-4 product-card-hover cursor-pointer">
-                        <div className="w-20 h-20 bg-[#0f0f0f] overflow-hidden flex-shrink-0">
+                      <div className="group flex gap-4 sm:gap-5 border border-border bg-white p-4 product-card-hover cursor-pointer shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+                        <div className="w-18 h-18 sm:w-20 sm:h-20 bg-[#F5F2EC] border border-border overflow-hidden flex-shrink-0 flex items-center justify-center p-2">
                           <img
                             src={product.images[0]}
                             alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
-                        <div className="flex flex-col justify-center">
-                          <p className="text-[8px] tracking-[0.35em] uppercase text-[#c9a84c]/50 mb-1">
-                            {product.category}
+                        <div className="flex flex-col justify-center min-w-0">
+                          <p className="text-[8px] tracking-[0.35em] uppercase text-[#c9a84c]/60 mb-1">
+                            {product.category === 'homme' ? 'Homme' : product.category === 'femme' ? 'Femme' : product.category}
                           </p>
-                          <h3 className="font-serif text-xl group-hover:text-[#c9a84c] transition-colors">{product.name}</h3>
+                          <h3 className="font-serif text-lg sm:text-xl group-hover:text-[#c9a84c] transition-colors truncate">{product.name}</h3>
                           <p className="text-[#c9a84c] text-sm mt-1">{formatPrice(product.price)}</p>
                         </div>
                       </div>
@@ -103,13 +105,13 @@ export default function SearchPage() {
               >
                 <p className="font-serif text-3xl text-foreground/20 mb-4">Aucun résultat</p>
                 <p className="text-foreground/30 text-xs tracking-widest mb-10">
-                  Essayez "Obsidian", "Lumière", "Chronos"...
+                  Essayez "Herbelin", "Tissot", "Or"...
                 </p>
-                <div className="flex justify-center gap-4">
-                  <Link href="/montres/homme" className="border border-[rgba(255,255,255,0.1)] text-foreground/40 text-xs tracking-[0.3em] uppercase px-6 py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c]/70 transition-colors">
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Link href="/montres/homme" className="border border-border text-foreground/40 text-[10px] tracking-[0.3em] uppercase px-6 py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c] transition-colors">
                     Homme
                   </Link>
-                  <Link href="/montres/femme" className="border border-[rgba(255,255,255,0.1)] text-foreground/40 text-xs tracking-[0.3em] uppercase px-6 py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c]/70 transition-colors">
+                  <Link href="/montres/femme" className="border border-border text-foreground/40 text-[10px] tracking-[0.3em] uppercase px-6 py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c] transition-colors">
                     Femme
                   </Link>
                 </div>
@@ -117,17 +119,17 @@ export default function SearchPage() {
             )}
 
             {!query && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
-                <p className="text-[9px] tracking-[0.4em] uppercase text-foreground/25 mb-6">Suggestions</p>
-                <div className="flex flex-wrap gap-3">
-                  {["Obsidian", "Lumière", "Atlas", "Chronos", "Céleste", "Saphir"].map(suggestion => (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-2">
+                <p className="text-[9px] tracking-[0.4em] uppercase text-foreground/25 mb-5">Suggestions</p>
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {suggestions.map(s => (
                     <button
-                      key={suggestion}
-                      data-testid={`suggestion-${suggestion.toLowerCase()}`}
-                      onClick={() => setQuery(suggestion)}
-                      className="border border-[rgba(255,255,255,0.08)] text-foreground/40 text-xs tracking-[0.2em] uppercase px-5 py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c]/70 transition-colors"
+                      key={s}
+                      data-testid={`suggestion-${s.toLowerCase()}`}
+                      onClick={() => setQuery(s)}
+                      className="border border-border text-foreground/40 text-xs tracking-[0.2em] uppercase px-4 sm:px-5 py-2 sm:py-3 hover:border-[#c9a84c]/40 hover:text-[#c9a84c] transition-colors bg-white"
                     >
-                      {suggestion}
+                      {s}
                     </button>
                   ))}
                 </div>
