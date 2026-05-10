@@ -2,444 +2,263 @@ import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiFilter, FiX, FiChevronDown, FiChevronUp } from "react-icons/fi";
-import { products, formatPrice, getDiscountedPrice, type Category, type Movement, type CaseMaterial, type StrapType, type DialColor, type CaseSize } from "@/lib/data";
-import { montre1, montre2 } from "@/lib/watch-images";
+import { products, formatPrice, getDiscountedPrice, type Category, type Movement, type CaseMaterial, type StrapType, type CaseSize } from "@/lib/data";
 import Navbar from "@/components/layout/navbar";
-import MarqueeStrip from "@/components/MarqueeStrip";
+
+type Filters = {
+  movement: Movement[];
+  caseMaterial: CaseMaterial[];
+  strapType: StrapType[];
+  caseSize: CaseSize[];
+};
 
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
+  visible: { transition: { staggerChildren: 0.06 } },
 };
-
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] } },
 };
 
-type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name';
-
-interface Filters {
-  quick: 'all' | 'new' | 'bestseller' | 'instock' | 'promo';
-  movement: Movement | 'all';
-  caseMaterial: CaseMaterial | 'all';
-  strapType: StrapType | 'all';
-  dialColor: DialColor | 'all';
-  caseSize: CaseSize | 'all';
-}
-
-const defaultFilters: Filters = {
-  quick: 'all',
-  movement: 'all',
-  caseMaterial: 'all',
-  strapType: 'all',
-  dialColor: 'all',
-  caseSize: 'all',
-};
-
-function FilterSection({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+function FilterSection({ title, options, selected, onChange }: {
+  title: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  if (options.length === 0) return null;
   return (
-    <div className="border-b border-border py-4">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center justify-between w-full text-left"
-      >
-        <span className="text-[9px] tracking-[0.4em] uppercase text-foreground/60 font-medium">{title}</span>
-        {open ? <FiChevronUp className="text-foreground/40 text-sm" /> : <FiChevronDown className="text-foreground/40 text-sm" />}
+    <div style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+      <button onClick={() => setOpen(o => !o)}
+        className="flex items-center justify-between w-full mb-3"
+        style={{ fontFamily: "'Jost', sans-serif", fontSize: '0.6rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.7)' }}>
+        {title}
+        {open ? <FiChevronUp style={{ fontSize: '0.75rem' }} /> : <FiChevronDown style={{ fontSize: '0.75rem' }} />}
       </button>
-      {open && <div className="mt-3 space-y-1.5">{children}</div>}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
+            <div className="flex flex-col gap-2">
+              {options.map(opt => (
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
+                  <input type="checkbox" checked={selected.includes(opt.value)}
+                    onChange={() => onChange(opt.value)} className="filter-checkbox" />
+                  <span style={{ fontSize: '0.75rem', color: selected.includes(opt.value) ? '#C9A84C' : 'rgba(245,240,232,0.5)', transition: 'color 0.2s', letterSpacing: '0.08em' }}>
+                    {opt.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
-function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`block w-full text-left text-xs py-1.5 px-2 transition-all duration-200 ${
-        active
-          ? 'text-[#c9a84c] bg-[#c9a84c]/8 border-l-2 border-[#c9a84c] pl-3'
-          : 'text-foreground/55 hover:text-foreground/80 hover:bg-foreground/4'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-const movementLabels: Record<Movement, string> = {
-  automatique: 'Automatique',
-  manuel: 'Manuel',
-  quartz: 'Quartz',
-};
-const caseMaterialLabels: Record<CaseMaterial, string> = {
-  'acier': 'Acier inoxydable',
-  'or-jaune': 'Or jaune',
-  'or-rose': 'Or rose',
-  'platine': 'Platine',
-};
-const strapTypeLabels: Record<StrapType, string> = {
-  cuir: 'Cuir',
-  acier: 'Bracelet acier',
-  caoutchouc: 'Caoutchouc',
-};
-const dialColorLabels: Record<DialColor, string> = {
-  blanc: 'Blanc',
-  bleu: 'Bleu',
-  noir: 'Noir',
-  nacre: 'Nacre',
-  brun: 'Brun',
-};
-const caseSizeLabels: Record<CaseSize, string> = {
-  grand: 'Grand modèle',
-  moyen: 'Taille moyenne',
-  compact: 'Compact',
-};
 
 export default function CataloguePage() {
-  const [matchHomme] = useRoute("/montres/homme");
-  const category: Category = matchHomme ? "homme" : "femme";
-  const [sort, setSort] = useState<SortOption>('default');
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [, params] = useRoute("/montres/:genre");
+  const genre = params?.genre as Category | undefined;
+  const [filters, setFilters] = useState<Filters>({ movement: [], caseMaterial: [], strapType: [], caseSize: [] });
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const baseProducts = products.filter(p => p.category === category);
+  const catProducts = genre ? products.filter(p => p.category === genre) : products.filter(p => p.category === 'homme' || p.category === 'femme');
 
-  let filtered = baseProducts;
-  if (filters.quick === 'new') filtered = filtered.filter(p => p.isNew);
-  if (filters.quick === 'bestseller') filtered = filtered.filter(p => p.isBestSeller);
-  if (filters.quick === 'instock') filtered = filtered.filter(p => p.inStock);
-  if (filters.quick === 'promo') filtered = filtered.filter(p => !!p.discount);
-  if (filters.movement !== 'all') filtered = filtered.filter(p => p.movement === filters.movement);
-  if (filters.caseMaterial !== 'all') filtered = filtered.filter(p => p.caseMaterial === filters.caseMaterial);
-  if (filters.strapType !== 'all') filtered = filtered.filter(p => p.strapType === filters.strapType);
-  if (filters.dialColor !== 'all') filtered = filtered.filter(p => p.dialColor === filters.dialColor);
-  if (filters.caseSize !== 'all') filtered = filtered.filter(p => p.caseSize === filters.caseSize);
+  const unique = <T extends string>(arr: (T | undefined)[]) => [...new Set(arr.filter(Boolean))] as T[];
+  const movementOptions = unique(catProducts.map(p => p.movement));
+  const caseMaterialOptions = unique(catProducts.map(p => p.caseMaterial));
+  const strapOptions = unique(catProducts.map(p => p.strapType));
+  const caseSizeOptions = unique(catProducts.map(p => p.caseSize));
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (sort === 'price-asc') return a.price - b.price;
-    if (sort === 'price-desc') return b.price - a.price;
-    if (sort === 'name') return a.name.localeCompare(b.name);
-    return 0;
+  const toggleFilter = <K extends keyof Filters>(key: K, value: Filters[K][number]) => {
+    setFilters(f => ({
+      ...f,
+      [key]: f[key].includes(value as never)
+        ? (f[key] as string[]).filter(v => v !== value)
+        : [...f[key], value as never],
+    }));
+  };
+
+  const activeCount = Object.values(filters).reduce((s, a) => s + a.length, 0);
+
+  const filtered = catProducts.filter(p => {
+    if (filters.movement.length && p.movement && !filters.movement.includes(p.movement)) return false;
+    if (filters.caseMaterial.length && p.caseMaterial && !filters.caseMaterial.includes(p.caseMaterial)) return false;
+    if (filters.strapType.length && p.strapType && !filters.strapType.includes(p.strapType)) return false;
+    if (filters.caseSize.length && p.caseSize && !filters.caseSize.includes(p.caseSize)) return false;
+    return true;
   });
 
-  const heroWatch = category === 'homme' ? montre1 : montre2;
+  const movLabels: Record<string, string> = { automatique: 'Automatique', manuel: 'Manuel', quartz: 'Quartz' };
+  const matLabels: Record<string, string> = { acier: 'Acier 316L', 'or-jaune': 'Or jaune', 'or-rose': 'Or rose', platine: 'Platine' };
+  const strapLabels: Record<string, string> = { cuir: 'Cuir', acier: 'Acier', caoutchouc: 'Caoutchouc' };
+  const sizeLabels: Record<string, string> = { grand: 'Grand (42mm+)', moyen: 'Moyen (38–41mm)', compact: 'Compact (≤37mm)' };
 
-  const activeFilterCount = Object.values(filters).filter(v => v !== 'all').length;
+  const label = genre === 'homme' ? 'Collection Homme' : genre === 'femme' ? 'Collection Femme' : 'Toutes les Montres';
 
-  const resetFilters = () => setFilters(defaultFilters);
-
-  const availableMovements = [...new Set(baseProducts.map(p => p.movement).filter(Boolean))] as Movement[];
-  const availableMaterials = [...new Set(baseProducts.map(p => p.caseMaterial).filter(Boolean))] as CaseMaterial[];
-  const availableStraps = [...new Set(baseProducts.map(p => p.strapType).filter(Boolean))] as StrapType[];
-  const availableDialColors = [...new Set(baseProducts.map(p => p.dialColor).filter(Boolean))] as DialColor[];
-  const availableSizes = [...new Set(baseProducts.map(p => p.caseSize).filter(Boolean))] as CaseSize[];
-
-  const filterPanel = (
-    <div className="w-full">
-      {/* Quick filters */}
-      <FilterSection title="Sélection rapide">
-        {[
-          { key: 'all', label: 'Toutes les pièces' },
-          { key: 'new', label: 'Nouveautés' },
-          { key: 'bestseller', label: 'Best-sellers' },
-          { key: 'instock', label: 'En stock' },
-          { key: 'promo', label: '⬥ Promotions' },
-        ].map(f => (
-          <FilterChip
-            key={f.key}
-            label={f.label}
-            active={filters.quick === f.key}
-            onClick={() => setFilters(prev => ({ ...prev, quick: f.key as Filters['quick'] }))}
-          />
-        ))}
-      </FilterSection>
-
-      {/* Mouvement */}
-      {availableMovements.length > 0 && (
-        <FilterSection title="Mouvement">
-          <FilterChip label="Tous" active={filters.movement === 'all'} onClick={() => setFilters(p => ({ ...p, movement: 'all' }))} />
-          {availableMovements.map(m => (
-            <FilterChip key={m} label={movementLabels[m]} active={filters.movement === m} onClick={() => setFilters(p => ({ ...p, movement: m }))} />
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Matière boîtier */}
-      {availableMaterials.length > 0 && (
-        <FilterSection title="Matière du boîtier">
-          <FilterChip label="Toutes" active={filters.caseMaterial === 'all'} onClick={() => setFilters(p => ({ ...p, caseMaterial: 'all' }))} />
-          {availableMaterials.map(m => (
-            <FilterChip key={m} label={caseMaterialLabels[m]} active={filters.caseMaterial === m} onClick={() => setFilters(p => ({ ...p, caseMaterial: m }))} />
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Bracelet */}
-      {availableStraps.length > 0 && (
-        <FilterSection title="Bracelet / Bracelet">
-          <FilterChip label="Tous" active={filters.strapType === 'all'} onClick={() => setFilters(p => ({ ...p, strapType: 'all' }))} />
-          {availableStraps.map(s => (
-            <FilterChip key={s} label={strapTypeLabels[s]} active={filters.strapType === s} onClick={() => setFilters(p => ({ ...p, strapType: s }))} />
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Couleur du cadran — femme only */}
-      {category === 'femme' && availableDialColors.length > 0 && (
-        <FilterSection title="Couleur du cadran">
-          <FilterChip label="Toutes" active={filters.dialColor === 'all'} onClick={() => setFilters(p => ({ ...p, dialColor: 'all' }))} />
-          {availableDialColors.map(c => (
-            <FilterChip key={c} label={dialColorLabels[c]} active={filters.dialColor === c} onClick={() => setFilters(p => ({ ...p, dialColor: c }))} />
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Taille du boîtier */}
-      {availableSizes.length > 0 && (
-        <FilterSection title="Taille du boîtier" defaultOpen={false}>
-          <FilterChip label="Toutes" active={filters.caseSize === 'all'} onClick={() => setFilters(p => ({ ...p, caseSize: 'all' }))} />
-          {availableSizes.map(s => (
-            <FilterChip key={s} label={caseSizeLabels[s]} active={filters.caseSize === s} onClick={() => setFilters(p => ({ ...p, caseSize: s }))} />
-          ))}
-        </FilterSection>
-      )}
-
-      {activeFilterCount > 0 && (
-        <button
-          onClick={resetFilters}
-          className="mt-4 w-full text-[9px] tracking-[0.3em] uppercase text-foreground/45 hover:text-[#c9a84c] transition-colors py-2 border border-border hover:border-[#c9a84c]/40"
-        >
-          Effacer les filtres ({activeFilterCount})
-        </button>
-      )}
+  const SidebarContent = () => (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <p style={{ fontFamily: "'Jost', sans-serif", fontSize: '0.6rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.7)' }}>
+          Filtres {activeCount > 0 && `(${activeCount})`}
+        </p>
+        {activeCount > 0 && (
+          <button onClick={() => setFilters({ movement: [], caseMaterial: [], strapType: [], caseSize: [] })}
+            style={{ fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(245,240,232,0.35)' }}
+            className="hover:text-[#C9A84C] transition-colors">
+            Effacer
+          </button>
+        )}
+      </div>
+      <FilterSection title="Mouvement" options={movementOptions.map(v => ({ value: v, label: movLabels[v] || v }))}
+        selected={filters.movement} onChange={v => toggleFilter('movement', v as Movement)} />
+      <FilterSection title="Boîtier" options={caseMaterialOptions.map(v => ({ value: v, label: matLabels[v] || v }))}
+        selected={filters.caseMaterial} onChange={v => toggleFilter('caseMaterial', v as CaseMaterial)} />
+      <FilterSection title="Bracelet" options={strapOptions.map(v => ({ value: v, label: strapLabels[v] || v }))}
+        selected={filters.strapType} onChange={v => toggleFilter('strapType', v as StrapType)} />
+      <FilterSection title="Taille" options={caseSizeOptions.map(v => ({ value: v, label: sizeLabels[v] || v }))}
+        selected={filters.caseSize} onChange={v => toggleFilter('caseSize', v as CaseSize)} />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div style={{ background: '#0C0A08', color: '#F5F0E8', minHeight: '100vh' }}>
       <Navbar />
 
-      {/* Hero banner */}
-      <div className="relative pt-24 pb-14 sm:pt-32 sm:pb-18 overflow-hidden bg-[#F0E8DC]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#EDE4D6] to-[#F5EFE6]" />
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#c9a84c]/40 to-transparent" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center gap-8 sm:gap-12">
-          <div className="flex-1 text-center sm:text-left">
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-[9px] tracking-[0.55em] uppercase text-[#c9a84c] mb-4 font-medium"
-            >
-              Collection
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="font-serif font-light text-5xl sm:text-6xl md:text-7xl text-foreground"
-            >
-              {category === 'homme' ? (
-                <>Pour <span className="italic gold-gradient-text">Lui</span></>
-              ) : (
-                <>Pour <span className="italic gold-gradient-text">Elle</span></>
-              )}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-foreground/55 text-xs tracking-[0.2em] mt-4"
-            >
-              {sorted.length} pièce{sorted.length !== 1 ? 's' : ''} sélectionnée{sorted.length !== 1 ? 's' : ''}
-            </motion.p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="w-36 sm:w-44 md:w-52 flex-shrink-0"
-          >
-            <img
-              src={heroWatch}
-              alt=""
-              className="w-full h-auto object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,0.15)]"
-            />
-          </motion.div>
+      {/* Header */}
+      <div className="relative pt-28 sm:pt-32 pb-10 px-6 overflow-hidden" style={{ background: '#09070A' }}>
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(201,168,76,0.07) 0%, transparent 55%)',
+        }} />
+        <div className="h-[2px] absolute top-0 left-0 right-0"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.4), transparent)' }} />
+        <div className="max-w-7xl mx-auto text-center relative z-10">
+          <p className="label-victorian mb-4">✦ &nbsp; {genre === 'homme' ? 'Horlogerie Masculine' : genre === 'femme' ? 'Horlogerie Féminine' : 'Toutes Catégories'} &nbsp; ✦</p>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', fontWeight: 300, letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
+            {label}
+          </h1>
+          <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.3)', letterSpacing: '0.25em' }}>
+            {filtered.length} pièce{filtered.length !== 1 ? 's' : ''} {activeCount > 0 ? 'filtrées' : 'disponibles'}
+          </p>
         </div>
       </div>
 
-      <MarqueeStrip />
+      <div className="vr-gold" />
 
-      {/* Mobile filter button */}
-      <div className="lg:hidden flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background">
-        <button
-          onClick={() => setMobileFilterOpen(true)}
-          className="flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase text-foreground/60 hover:text-[#c9a84c] transition-colors"
-        >
-          <FiFilter />
-          Filtrer
-          {activeFilterCount > 0 && (
-            <span className="bg-[#c9a84c] text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-        <select
-          value={sort}
-          onChange={e => setSort(e.target.value as SortOption)}
-          className="bg-white border border-border text-foreground/60 text-[9px] tracking-[0.15em] uppercase px-3 py-2 focus:outline-none focus:border-[#c9a84c]/40"
-        >
-          <option value="default">Par défaut</option>
-          <option value="price-asc">Prix croissant</option>
-          <option value="price-desc">Prix décroissant</option>
-          <option value="name">Nom</option>
-        </select>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {/* Mobile filter button */}
+        <div className="flex items-center justify-between mb-8 lg:hidden">
+          <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.4)', letterSpacing: '0.2em' }}>
+            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+          </p>
+          <button onClick={() => setMobileFilterOpen(true)} className="btn-victorian flex items-center gap-2"
+            style={{ padding: '0.6rem 1.2rem' }}>
+            <FiFilter style={{ fontSize: '0.75rem' }} />
+            Filtres {activeCount > 0 && `(${activeCount})`}
+          </button>
+        </div>
 
-      {/* Mobile filter drawer */}
-      <AnimatePresence>
-        {mobileFilterOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/30 z-40 lg:hidden"
-              onClick={() => setMobileFilterOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 left-0 w-72 bg-background z-50 lg:hidden overflow-y-auto p-6"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[9px] tracking-[0.4em] uppercase text-[#c9a84c] font-medium">Filtres</p>
-                <button onClick={() => setMobileFilterOpen(false)} className="text-foreground/50 hover:text-foreground">
-                  <FiX className="text-xl" />
-                </button>
-              </div>
-              {filterPanel}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Main layout: sidebar + grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="flex gap-10">
-
-          {/* Desktop sidebar */}
-          <aside className="hidden lg:block w-52 flex-shrink-0">
-            <div className="sticky top-28">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[9px] tracking-[0.4em] uppercase text-[#c9a84c] font-medium">Filtres</p>
-                {activeFilterCount > 0 && (
-                  <button onClick={resetFilters} className="text-[8px] tracking-[0.2em] uppercase text-foreground/40 hover:text-[#c9a84c] transition-colors">
-                    Effacer ({activeFilterCount})
-                  </button>
-                )}
-              </div>
-              {filterPanel}
+          {/* Sidebar desktop */}
+          <aside className="hidden lg:block w-52 flex-shrink-0 sticky top-24 self-start">
+            <div style={{ borderTop: '1px solid rgba(201,168,76,0.2)', paddingTop: '1.5rem' }}>
+              <SidebarContent />
             </div>
           </aside>
 
-          <div className="flex-1 min-w-0">
-            {/* Desktop sort bar */}
-            <div className="hidden lg:flex items-center justify-between mb-8">
-              <p className="text-xs text-foreground/50 tracking-wider">
-                <span className="text-foreground/80 font-medium">{sorted.length}</span> résultat{sorted.length !== 1 ? 's' : ''}
+          {/* Products grid */}
+          {filtered.length === 0 ? (
+            <div className="flex-1 text-center py-24">
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', fontWeight: 300, color: 'rgba(245,240,232,0.2)', marginBottom: '1.5rem' }}>
+                Aucune pièce trouvée
               </p>
-              <select
-                value={sort}
-                onChange={e => setSort(e.target.value as SortOption)}
-                className="bg-white border border-border text-foreground/60 text-[9px] tracking-[0.2em] uppercase px-4 py-2 focus:outline-none focus:border-[#c9a84c]/40"
-              >
-                <option value="default">Par défaut</option>
-                <option value="price-asc">Prix croissant</option>
-                <option value="price-desc">Prix décroissant</option>
-                <option value="name">Nom</option>
-              </select>
+              <button onClick={() => setFilters({ movement: [], caseMaterial: [], strapType: [], caseSize: [] })}
+                className="btn-victorian">Effacer les filtres</button>
             </div>
-
-            {/* Grid */}
-            {sorted.length === 0 ? (
-              <div className="text-center py-28 text-foreground/35 font-serif text-2xl">Aucun résultat</div>
-            ) : (
-              <motion.div
-                key={`${category}-${JSON.stringify(filters)}-${sort}`}
-                variants={stagger}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-              >
-                {sorted.map(product => (
+          ) : (
+            <motion.div variants={stagger} initial="hidden" animate="visible"
+              className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+              {filtered.map(product => {
+                const disc = product.discount ? getDiscountedPrice(product.price, product.discount) : null;
+                return (
                   <motion.div key={product.id} variants={fadeUp}>
                     <Link href={`/produit/${product.id}`}>
-                      <div className="group border border-border bg-white product-card-hover cursor-pointer overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
-                        <div className="aspect-square bg-[#F8F5EF] overflow-hidden relative flex items-center justify-center p-5 sm:p-6">
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 drop-shadow-[0_8px_24px_rgba(0,0,0,0.1)]"
-                            style={{ maxHeight: '100%', maxWidth: '100%' }}
-                          />
+                      <div className="card-victorian cursor-pointer overflow-hidden group h-full flex flex-col">
+                        <div className="watch-display aspect-square flex items-center justify-center p-7 sm:p-9 relative">
+                          <img src={product.images[0]} alt={product.name}
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
+                            style={{ maxHeight: '100%', maxWidth: '100%', filter: 'drop-shadow(0 10px 35px rgba(0,0,0,0.7))' }} />
                           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                             {product.discount && (
-                              <span className="text-[7px] tracking-[0.2em] uppercase bg-[#c9a84c] text-white px-2 py-1 font-medium promo-badge">
-                                -{product.discount}%
-                              </span>
+                              <span className="promo-badge text-[7px] tracking-[0.2em] uppercase px-2 py-0.5 font-medium"
+                                style={{ background: '#C9A84C', color: '#0C0A08' }}>-{product.discount}%</span>
                             )}
-                            {product.isNew && !product.discount && (
-                              <span className="text-[7px] tracking-[0.25em] uppercase bg-[#1C1812] text-white px-2 py-1">
-                                Nouveau
-                              </span>
+                            {product.isNew && (
+                              <span className="text-[7px] tracking-[0.2em] uppercase px-2 py-0.5"
+                                style={{ background: '#1C1408', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.3)' }}>Nouveau</span>
                             )}
                             {!product.inStock && (
-                              <span className="text-[7px] tracking-[0.25em] uppercase bg-red-500 text-white px-2 py-1">
-                                Rupture
-                              </span>
+                              <span className="text-[7px] tracking-[0.2em] uppercase px-2 py-0.5"
+                                style={{ background: 'rgba(100,20,20,0.8)', color: '#F5A0A0' }}>Rupture</span>
                             )}
                           </div>
                         </div>
-                        <div className="p-4 sm:p-5">
-                          <h3 className="font-serif text-base sm:text-lg md:text-xl mb-1.5 group-hover:text-[#c9a84c] transition-colors duration-300 line-clamp-1 text-foreground">
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col" style={{ borderTop: '1px solid rgba(201,168,76,0.13)' }}>
+                          <p className="label-victorian mb-2" style={{ fontSize: '0.53rem' }}>
+                            {product.movement === 'automatique' ? 'Mécanique Auto.' : 'Quartz'}
+                            {product.caseMaterial && ` · ${matLabels[product.caseMaterial]}`}
+                          </p>
+                          <h3 className="flex-1 mb-3 group-hover:text-[#C9A84C] transition-colors"
+                            style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.2rem', fontWeight: 400, letterSpacing: '0.02em' }}>
                             {product.name}
                           </h3>
-                          <p className="text-foreground/50 text-xs leading-relaxed mb-3 line-clamp-2 hidden sm:block">
-                            {product.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-[#c9a84c] text-sm tracking-wider font-medium">
-                                {product.discount
-                                  ? formatPrice(getDiscountedPrice(product.price, product.discount))
-                                  : formatPrice(product.price)}
-                              </p>
-                              {product.discount && (
-                                <p className="text-foreground/35 text-xs line-through">{formatPrice(product.price)}</p>
-                              )}
-                            </div>
-                            <span className="text-[9px] tracking-[0.3em] uppercase text-foreground/30 group-hover:text-[#c9a84c]/60 transition-colors hidden sm:block">
-                              Voir →
+                          <div className="flex items-center gap-2">
+                            <span className="gold-text" style={{ fontSize: '0.95rem', letterSpacing: '0.05em' }}>
+                              {disc ? formatPrice(disc) : formatPrice(product.price)}
                             </span>
+                            {disc && (
+                              <span style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.22)', textDecoration: 'line-through' }}>
+                                {formatPrice(product.price)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                     </Link>
                   </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </div>
+                );
+              })}
+            </motion.div>
+          )}
         </div>
       </div>
+
+      {/* Mobile filter drawer */}
+      <AnimatePresence>
+        {mobileFilterOpen && (
+          <motion.div className="fixed inset-0 z-50 flex" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setMobileFilterOpen(false)} />
+            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-72 h-full overflow-y-auto p-7" style={{ background: '#0E0C08', borderRight: '1px solid rgba(201,168,76,0.18)' }}>
+              <div className="h-[2px] absolute top-0 left-0 right-0"
+                style={{ background: 'linear-gradient(to right, #C9A84C, #E2C87A, #C9A84C)' }} />
+              <div className="flex items-center justify-between mb-8">
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, letterSpacing: '0.05em' }}>Filtres</p>
+                <button onClick={() => setMobileFilterOpen(false)} style={{ color: 'rgba(245,240,232,0.4)' }}
+                  className="hover:text-[#C9A84C] transition-colors"><FiX /></button>
+              </div>
+              <SidebarContent />
+              <button onClick={() => setMobileFilterOpen(false)} className="btn-victorian-filled w-full mt-4">
+                Appliquer ({filtered.length})
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

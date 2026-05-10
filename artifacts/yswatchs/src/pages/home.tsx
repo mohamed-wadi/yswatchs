@@ -1,488 +1,344 @@
 import { useRef } from "react";
 import { Link } from "wouter";
-import { motion, useInView } from "framer-motion";
-import { FiArrowRight, FiArrowDownRight } from "react-icons/fi";
-import { products, formatPrice, getDiscountedPrice } from "@/lib/data";
-import { montre1, montre2, watchGold, watchSilver } from "@/lib/watch-images";
-import MarqueeStrip from "@/components/MarqueeStrip";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { FiArrowRight, FiTag } from "react-icons/fi";
+import { products, formatPrice, getDiscountedPrice, getDiscountedProducts } from "@/lib/data";
 import Navbar from "@/components/layout/navbar";
+import MarqueeStrip from "@/components/MarqueeStrip";
 
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] } },
 };
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
-};
-
-function SectionReveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+function GearSvg({ size = 80, className = '' }: { size?: number; className?: string }) {
   return (
-    <motion.div
-      ref={ref}
-      variants={fadeUp}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      className={className}
-    >
-      {children}
-    </motion.div>
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" className={className}
+      style={{ color: 'rgba(201,168,76,0.12)' }}>
+      <path d="M50 20a30 30 0 1 0 0 60A30 30 0 0 0 50 20zm0 8a22 22 0 1 1 0 44 22 22 0 0 1 0-44z" fill="currentColor"/>
+      {[0,30,60,90,120,150,180,210,240,270,300,330].map((a,i) => (
+        <rect key={i} x="47" y="6" width="6" height="14" rx="1" fill="currentColor" transform={`rotate(${a} 50 50)`} />
+      ))}
+      <circle cx="50" cy="50" r="6" fill="currentColor"/>
+    </svg>
   );
 }
 
-const featured = products.filter(p => p.isBestSeller && (p.category === 'homme' || p.category === 'femme')).slice(0, 4);
-const newArrivals = products.filter(p => p.isNew && (p.category === 'homme' || p.category === 'femme')).slice(0, 3);
-
 export default function HomePage() {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "28%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  const featured = products.slice(0, 3);
+  const promoProducts = getDiscountedProducts().slice(0, 2);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div style={{ background: '#0C0A08', color: '#F5F0E8', minHeight: '100vh' }}>
       <Navbar />
 
-      {/* ─── HERO ─── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden hero-animated-bg">
-        {/* Subtle gold radial glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 right-1/3 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#c9a84c]/10 blur-[120px]" />
-          <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] rounded-full bg-[#c9a84c]/6 blur-[80px]" />
-        </div>
+      {/* ═══ HERO ═══════════════════════════════════════════ */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0" style={{ background: '#08060A' }} />
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse 70% 55% at 50% 60%, rgba(201,168,76,0.07) 0%, transparent 60%)',
+        }} />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, rgba(8,6,10,0.55) 0%, transparent 35%, rgba(8,6,10,0.9) 85%, #0C0A08 100%)' }} />
 
-        {/* Decorative grid lines */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-          style={{ backgroundImage: 'linear-gradient(#c9a84c 1px, transparent 1px), linear-gradient(90deg, #c9a84c 1px, transparent 1px)', backgroundSize: '80px 80px' }}
-        />
+        {/* Gears */}
+        <motion.div className="absolute top-24 right-16 gear-spin hidden lg:block" style={{ y: heroY, opacity: heroOpacity }}>
+          <GearSvg size={130} />
+        </motion.div>
+        <motion.div className="absolute bottom-32 left-12 gear-spin-slow hidden lg:block" style={{ y: heroY, opacity: heroOpacity }}>
+          <GearSvg size={90} />
+        </motion.div>
+        <motion.div className="absolute top-2/3 right-24 gear-spin-med hidden xl:block" style={{ y: heroY }}>
+          <GearSvg size={55} />
+        </motion.div>
+        <motion.div className="absolute top-1/4 left-24 gear-spin-slow hidden xl:block" style={{ y: heroY }}>
+          <GearSvg size={70} />
+        </motion.div>
 
-        {/* Gold accent line top */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#c9a84c]/50 to-transparent" />
+        {/* Corner ornaments */}
+        {[
+          { pos: 'top-6 left-6', t: true, l: true },
+          { pos: 'top-6 right-6', t: true, r: true },
+          { pos: 'bottom-6 left-6', b: true, l: true },
+          { pos: 'bottom-6 right-6', b: true, r: true },
+        ].map(({ pos, t, b, l, r }, i) => (
+          <div key={i} className={`absolute ${pos} hidden sm:block`}>
+            <div className="w-10 h-10" style={{
+              borderTop: t ? '1px solid rgba(201,168,76,0.3)' : 'none',
+              borderBottom: b ? '1px solid rgba(201,168,76,0.3)' : 'none',
+              borderLeft: l ? '1px solid rgba(201,168,76,0.3)' : 'none',
+              borderRight: r ? '1px solid rgba(201,168,76,0.3)' : 'none',
+            }} />
+          </div>
+        ))}
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-8 pt-28 pb-20 md:pt-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        {/* Hero content */}
+        <motion.div className="relative z-10 text-center px-6 max-w-4xl mx-auto" style={{ y: heroY, opacity: heroOpacity }}>
+          <motion.p className="label-victorian mb-8 fade-up fade-up-1" style={{ display: 'block' }}>
+            ✦ &nbsp; Maison d'Horlogerie · Maroc &nbsp; ✦
+          </motion.p>
 
-            {/* Left: text */}
-            <div className="order-2 lg:order-1">
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="flex items-center gap-3 mb-8"
-              >
-                <div className="w-8 h-[1px] bg-[#c9a84c]" />
-                <p className="text-[10px] tracking-[0.55em] uppercase text-[#c9a84c] font-medium">
-                  Collection 2025
-                </p>
-              </motion.div>
+          <h1 className="fade-up fade-up-2" style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 'clamp(3.5rem, 10vw, 7.5rem)',
+            fontWeight: 300,
+            lineHeight: 1.05,
+            letterSpacing: '0.03em',
+            marginBottom: '1.5rem',
+          }}>
+            L'Art du Temps<br/>
+            <em className="gold-text" style={{ fontStyle: 'italic' }}>Perpétuel</em>
+          </h1>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.1, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="font-serif font-light text-5xl sm:text-6xl md:text-7xl xl:text-8xl leading-[0.92] mb-8 text-foreground"
-              >
-                L'Art<br />
-                du{" "}
-                <span className="italic gold-gradient-text">Temps</span>
-              </motion.h1>
+          <div className="fade-up fade-up-3" style={{ marginBottom: '2.5rem' }}>
+            <p style={{
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: 300,
+              fontSize: '0.8rem',
+              letterSpacing: '0.15em',
+              color: 'rgba(245,240,232,0.45)',
+              maxWidth: '420px',
+              margin: '0 auto',
+              lineHeight: 1.9,
+            }}>
+              Chaque montre est une œuvre vivante — engrenages, cadrans et aiguilles
+              orchestrés pour l'éternité. Bienvenue dans la Maison YsWatchs.
+            </p>
+          </div>
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.55 }}
-                className="text-foreground/65 text-sm leading-loose max-w-sm mb-10 font-light tracking-wide"
-              >
-                Montres de prestige pour hommes et femmes.
-                Chaque pièce, une histoire. Chaque minute, une œuvre d'art.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.75 }}
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
-              >
-                <Link
-                  href="/montres/homme"
-                  className="group inline-flex items-center gap-3 bg-[#1C1812] text-white text-[10px] tracking-[0.3em] uppercase px-7 py-4 hover:bg-[#c9a84c] transition-all duration-400"
-                >
-                  Collection Homme
-                  <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/montres/femme"
-                  className="group inline-flex items-center gap-3 border border-[#c9a84c] text-[#c9a84c] text-[10px] tracking-[0.3em] uppercase px-7 py-4 hover:bg-[#c9a84c] hover:text-white transition-all duration-400"
-                >
-                  Collection Femme
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.1 }}
-                className="mt-16 flex items-center gap-8"
-              >
-                {[
-                  { num: "12+", label: "Collections" },
-                  { num: "100%", label: "Authenticité" },
-                  { num: "2025", label: "Nouveautés" },
-                ].map(s => (
-                  <div key={s.label}>
-                    <p className="font-serif text-2xl text-foreground font-light">{s.num}</p>
-                    <p className="text-[9px] tracking-[0.35em] uppercase text-foreground/45 mt-1">{s.label}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* Right: watch images stack */}
-            <div className="order-1 lg:order-2 relative flex items-center justify-center min-h-[360px] sm:min-h-[480px] lg:min-h-[600px]">
-              {/* Gold circle glow */}
-              <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-[#c9a84c]/12 blur-3xl" />
-
-              {/* Background watch — montre2 (Benyar) */}
-              <motion.div
-                initial={{ opacity: 0, x: 40, rotate: 8 }}
-                animate={{ opacity: 0.55, x: 0, rotate: 8 }}
-                transition={{ duration: 1.1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-4 sm:right-8 top-8 sm:top-12 w-44 sm:w-56 lg:w-64"
-              >
-                <img
-                  src={montre2}
-                  alt=""
-                  className="w-full h-auto object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                />
-              </motion.div>
-
-              {/* Side watch — silver */}
-              <motion.div
-                initial={{ opacity: 0, x: -30, rotate: -5 }}
-                animate={{ opacity: 0.5, x: 0, rotate: -5 }}
-                transition={{ duration: 1.1, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute left-4 sm:left-8 bottom-16 sm:bottom-20 w-32 sm:w-40 lg:w-48"
-              >
-                <img
-                  src={watchSilver}
-                  alt=""
-                  className="w-full h-auto object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,0.15)]"
-                />
-              </motion.div>
-
-              {/* Hero main watch — montre1 (Pagani) */}
-              <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-52 sm:w-64 md:w-72 lg:w-80"
-              >
-                <img
-                  src={montre1}
-                  alt="YsWatchs — Pagani Classic"
-                  className="w-full h-auto object-contain drop-shadow-[0_30px_80px_rgba(201,168,76,0.3)]"
-                />
-              </motion.div>
-
-              {/* Floating tag */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0, duration: 0.7 }}
-                className="absolute bottom-6 right-6 sm:bottom-8 sm:right-10 bg-white/90 backdrop-blur-sm border border-[#c9a84c]/30 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.1)]"
-              >
-                <p className="text-[8px] tracking-[0.4em] uppercase text-foreground/50">À partir de</p>
-                <p className="font-serif text-lg text-foreground font-light">12 500 DH</p>
-              </motion.div>
-            </div>
+          <div className="fade-up fade-up-4 flex items-center justify-center gap-4 flex-wrap">
+            <Link href="/montres/homme">
+              <button className="btn-victorian-filled">Découvrir la Collection</button>
+            </Link>
+            <Link href="/promotions">
+              <button className="btn-victorian" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <FiTag style={{ fontSize: '0.7rem' }} /> Promotions
+              </button>
+            </Link>
           </div>
 
           {/* Scroll cue */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4 }}
-            className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-foreground/35"
-          >
-            <FiArrowDownRight className="text-lg" />
-            <span className="text-[8px] tracking-[0.5em] uppercase">Découvrir</span>
+          <motion.div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '-110px' }}
+            animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+            <div style={{ width: '1px', height: '46px', background: 'linear-gradient(to bottom, rgba(201,168,76,0.5), transparent)', margin: '0 auto 6px' }} />
+            <p style={{ fontSize: '0.5rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.3)', fontFamily: "'Jost', sans-serif" }}>Défiler</p>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* ─── MARQUEE ─── */}
-      <MarqueeStrip />
+      {/* Marquee */}
+      <div className="relative z-10">
+        <div className="vr-gold" />
+        <MarqueeStrip />
+        <div className="vr-gold" />
+      </div>
 
-      {/* ─── BEST SELLERS ─── */}
-      <section className="py-20 sm:py-28 px-6 bg-background">
+      {/* ═══ FEATURED ═══════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <SectionReveal className="text-center mb-14 sm:mb-20">
-            <p className="text-[10px] tracking-[0.5em] uppercase text-[#c9a84c] mb-4 font-medium">Sélection</p>
-            <h2 className="font-serif font-light text-4xl sm:text-5xl md:text-6xl text-foreground">Meilleures Ventes</h2>
-            <div className="w-12 h-[1px] bg-[#c9a84c]/50 mx-auto mt-6" />
-          </SectionReveal>
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-60px" }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
-          >
-            {featured.map((product) => (
-              <motion.div key={product.id} variants={fadeUp}>
-                <Link href={`/produit/${product.id}`}>
-                  <div className="group border border-border bg-white product-card-hover cursor-pointer overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-                    <div className="relative aspect-square overflow-hidden bg-[#F8F5EF] flex items-center justify-center p-6">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 drop-shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
-                        style={{ maxHeight: '100%', maxWidth: '100%' }}
-                      />
-                      {product.discount && (
-                        <div className="absolute top-3 left-3 bg-[#c9a84c] text-white text-[8px] tracking-[0.2em] uppercase px-2 py-1 promo-badge font-medium">
-                          -{product.discount}%
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4 sm:p-5">
-                      <p className="text-[8px] tracking-[0.35em] uppercase text-[#c9a84c] mb-1 font-medium">
-                        {product.category === 'homme' ? 'Homme' : 'Femme'}
-                      </p>
-                      <h3 className="font-serif text-base sm:text-lg mb-2 group-hover:text-[#c9a84c] transition-colors duration-300 line-clamp-1 text-foreground">{product.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[#c9a84c] text-sm tracking-wider font-medium">
-                          {product.discount
-                            ? formatPrice(getDiscountedPrice(product.price, product.discount))
-                            : formatPrice(product.price)}
-                        </p>
-                        {product.discount && (
-                          <p className="text-foreground/35 text-xs line-through">{formatPrice(product.price)}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-center mb-16">
+            <p className="label-victorian mb-5">✦ &nbsp; Pièces d'Exception &nbsp; ✦</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 300, letterSpacing: '0.04em' }}>
+              Collection <em className="gold-text" style={{ fontStyle: 'italic' }}>Prestige</em>
+            </h2>
+            <div className="ornament-divider mt-6 max-w-xs mx-auto">◆</div>
           </motion.div>
 
-          <SectionReveal className="text-center mt-12">
-            <Link
-              href="/collections"
-              className="group border border-foreground/25 text-foreground/70 text-[10px] tracking-[0.3em] uppercase px-10 py-4 hover:border-[#c9a84c] hover:text-[#c9a84c] transition-all duration-400 inline-flex items-center gap-3"
-            >
-              Voir toutes les collections
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </SectionReveal>
-        </div>
-      </section>
-
-      {/* ─── SPLIT BANNER ─── */}
-      <section className="grid grid-cols-1 md:grid-cols-2">
-        <Link href="/montres/homme" className="group relative overflow-hidden min-h-[50vw] md:min-h-[560px] flex items-end bg-[#1C1812] cursor-pointer">
-          <div className="absolute inset-0 flex items-center justify-center p-12">
-            <img
-              src={montre1}
-              alt="Collection Homme"
-              className="w-full max-w-[280px] sm:max-w-xs h-auto object-contain group-hover:scale-105 transition-transform duration-700 drop-shadow-[0_20px_60px_rgba(201,168,76,0.25)]"
-            />
-          </div>
-          <div className="relative z-10 p-8 sm:p-10 w-full bg-gradient-to-t from-[#1C1812] via-[#1C1812]/60 to-transparent">
-            <p className="text-[8px] tracking-[0.5em] uppercase text-[#c9a84c] mb-2 font-medium">Collection</p>
-            <h3 className="font-serif font-light text-3xl sm:text-4xl md:text-5xl text-white mb-4">Pour Lui</h3>
-            <span className="text-[10px] tracking-[0.3em] uppercase text-white/50 border-b border-white/25 pb-1 group-hover:text-[#c9a84c] group-hover:border-[#c9a84c] transition-colors duration-300 inline-block">
-              Découvrir
-            </span>
-          </div>
-        </Link>
-
-        <Link href="/montres/femme" className="group relative overflow-hidden min-h-[50vw] md:min-h-[560px] flex items-end bg-[#F0E8DC] cursor-pointer">
-          <div className="absolute inset-0 flex items-center justify-center p-12">
-            <img
-              src={watchGold}
-              alt="Collection Femme"
-              className="w-full max-w-[260px] sm:max-w-xs h-auto object-contain group-hover:scale-105 transition-transform duration-700 drop-shadow-[0_20px_60px_rgba(0,0,0,0.15)]"
-            />
-          </div>
-          <div className="relative z-10 p-8 sm:p-10 w-full bg-gradient-to-t from-[#E8DDD0]/95 via-[#E8DDD0]/50 to-transparent">
-            <p className="text-[8px] tracking-[0.5em] uppercase text-[#c9a84c] mb-2 font-medium">Collection</p>
-            <h3 className="font-serif font-light text-3xl sm:text-4xl md:text-5xl text-foreground mb-4">Pour Elle</h3>
-            <span className="text-[10px] tracking-[0.3em] uppercase text-foreground/50 border-b border-foreground/25 pb-1 group-hover:text-[#c9a84c] group-hover:border-[#c9a84c] transition-colors duration-300 inline-block">
-              Découvrir
-            </span>
-          </div>
-        </Link>
-      </section>
-
-      <MarqueeStrip />
-
-      {/* ─── PROMOS BANNER ─── */}
-      <section className="py-16 px-6 bg-[#1C1812] relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_50%,rgba(201,168,76,0.12)_0%,transparent_70%)]" />
-        </div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <SectionReveal>
-            <p className="text-[10px] tracking-[0.55em] uppercase text-[#c9a84c] mb-4 font-medium">Offres exclusives</p>
-            <h2 className="font-serif font-light text-4xl sm:text-5xl text-white mb-5">
-              Promotions & <span className="italic gold-gradient-text">Privilèges</span>
-            </h2>
-            <p className="text-white/55 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
-              Des pièces d'exception à des prix privilégiés — pour un temps limité seulement.
-            </p>
-            <Link
-              href="/promotions"
-              className="inline-flex items-center gap-3 bg-[#c9a84c] text-white text-[10px] tracking-[0.35em] uppercase px-8 py-4 hover:bg-[#d4b55a] transition-all duration-300"
-            >
-              Voir les promotions
-              <FiArrowRight />
-            </Link>
-          </SectionReveal>
-        </div>
-      </section>
-
-      {/* ─── NEW ARRIVALS ─── */}
-      <section className="py-20 sm:py-28 px-6 bg-[#F3EDE4]">
-        <div className="max-w-7xl mx-auto">
-          <SectionReveal className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-14 sm:mb-20 gap-4">
-            <div>
-              <p className="text-[10px] tracking-[0.5em] uppercase text-[#c9a84c] mb-4 font-medium">Nouveautés</p>
-              <h2 className="font-serif font-light text-4xl sm:text-5xl md:text-6xl text-foreground">Dernières Arrivées</h2>
-            </div>
-            <Link href="/collections" className="text-[10px] tracking-[0.3em] uppercase text-foreground/50 hover:text-[#c9a84c] transition-colors whitespace-nowrap border-b border-foreground/20 pb-1 hover:border-[#c9a84c]">
-              Tout voir
-            </Link>
-          </SectionReveal>
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12"
-          >
-            {newArrivals.map((product, i) => (
-              <motion.div key={product.id} variants={fadeUp}>
-                <Link href={`/produit/${product.id}`}>
-                  <div className="group cursor-pointer">
-                    <div className={`relative overflow-hidden bg-white flex items-center justify-center p-6 sm:p-8 mb-5 shadow-[0_2px_20px_rgba(0,0,0,0.07)] ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 drop-shadow-[0_12px_40px_rgba(0,0,0,0.1)]"
-                        style={{ maxHeight: '100%', maxWidth: '100%' }}
-                      />
-                      {product.discount && (
-                        <div className="absolute top-4 left-4 bg-[#c9a84c] text-white text-[8px] tracking-[0.2em] uppercase px-2.5 py-1 promo-badge font-medium">
-                          -{product.discount}%
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {featured.map(product => {
+              const disc = product.discount ? getDiscountedPrice(product.price, product.discount) : null;
+              return (
+                <motion.div key={product.id} variants={fadeUp}>
+                  <Link href={`/produit/${product.id}`}>
+                    <div className="card-victorian cursor-pointer overflow-hidden group">
+                      <div className="watch-display aspect-square flex items-center justify-center p-8 sm:p-10 relative">
+                        <img src={product.images[0]} alt={product.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
+                          style={{ maxHeight: '100%', maxWidth: '100%', filter: 'drop-shadow(0 12px 40px rgba(0,0,0,0.7))' }} />
+                        <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                          {product.discount && (
+                            <span className="promo-badge text-[8px] tracking-[0.2em] uppercase px-2.5 py-1 font-medium"
+                              style={{ background: '#C9A84C', color: '#0C0A08' }}>
+                              -{product.discount}%
+                            </span>
+                          )}
+                          {product.isNew && (
+                            <span className="text-[7px] tracking-[0.25em] uppercase px-2.5 py-1"
+                              style={{ background: '#1C1408', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.35)' }}>
+                              Nouveau
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <p className="text-[8px] tracking-[0.3em] uppercase text-[#c9a84c] mb-1 font-medium">
-                          {product.isNew && <span>Nouveau · </span>}
-                          {product.category === 'homme' ? 'Homme' : 'Femme'}
-                        </p>
-                        <h3 className="font-serif text-xl sm:text-2xl group-hover:text-[#c9a84c] transition-colors duration-300 text-foreground">{product.name}</h3>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-4">
-                        <p className="text-[#c9a84c] text-sm font-medium">
-                          {product.discount
-                            ? formatPrice(getDiscountedPrice(product.price, product.discount))
-                            : formatPrice(product.price)}
+                      <div className="p-5 sm:p-6" style={{ borderTop: '1px solid rgba(201,168,76,0.14)' }}>
+                        <p className="label-victorian mb-2" style={{ fontSize: '0.55rem' }}>
+                          {product.movement === 'automatique' ? 'Mécanique Automatique' : 'Mouvement Quartz'}
                         </p>
-                        {product.discount && (
-                          <p className="text-foreground/35 text-xs line-through">{formatPrice(product.price)}</p>
-                        )}
+                        <h3 className="mb-3 group-hover:text-[#C9A84C] transition-colors"
+                          style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3rem', fontWeight: 400, letterSpacing: '0.02em' }}>
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <span className="gold-text" style={{ fontSize: '1rem', letterSpacing: '0.05em' }}>
+                              {disc ? formatPrice(disc) : formatPrice(product.price)}
+                            </span>
+                            {disc && (
+                              <span style={{ fontSize: '0.75rem', color: 'rgba(245,240,232,0.22)', textDecoration: 'line-through' }}>
+                                {formatPrice(product.price)}
+                              </span>
+                            )}
+                          </div>
+                          <FiArrowRight style={{ color: 'rgba(201,168,76,0.3)', fontSize: '0.85rem' }}
+                            className="group-hover:text-[#C9A84C] transition-colors" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── BRAND QUOTE ─── */}
-      <section className="py-24 sm:py-32 px-6 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_70%_50%_at_50%_50%,rgba(201,168,76,0.07)_0%,transparent_70%)]" />
-        </div>
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <SectionReveal>
-            <div className="w-8 h-[1px] bg-[#c9a84c]/50 mx-auto mb-10" />
-            <p className="text-[10px] tracking-[0.5em] uppercase text-[#c9a84c] mb-8 font-medium">Notre Philosophie</p>
-            <h2 className="font-serif font-light text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight mb-10 text-foreground">
-              "Le temps ne se possède pas.{" "}
-              <span className="italic gold-gradient-text">Il se contemple.</span>"
-            </h2>
-            <p className="text-foreground/55 leading-relaxed text-sm font-light max-w-xl mx-auto mb-10">
-              Chez YsWatchs, chaque montre est une œuvre d'art vivante. Nous sélectionnons des pièces qui transcendent la simple fonction — des instruments qui racontent une histoire, portent une âme, et traversent les générations.
-            </p>
-            <div className="w-8 h-[1px] bg-[#c9a84c]/50 mx-auto" />
-          </SectionReveal>
-        </div>
-      </section>
-
-      {/* ─── FOOTER ─── */}
-      <footer className="border-t border-border py-14 sm:py-16 px-6 bg-[#EDE5D9]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12">
-          <div className="sm:col-span-2">
-            <p className="font-serif text-2xl text-foreground mb-1">YsWatchs</p>
-            <p className="text-[10px] tracking-[0.3em] uppercase text-[#c9a84c] mb-4 font-medium">L'Art du Temps</p>
-            <p className="text-foreground/55 text-xs leading-relaxed max-w-xs">
-              Montres de prestige pour hommes et femmes au Maroc. L'art du temps, capturé dans chaque pièce.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <input
-                type="email"
-                placeholder="Votre email"
-                className="flex-1 bg-white/80 border border-border px-4 py-2 text-xs text-foreground/70 placeholder-foreground/35 focus:outline-none focus:border-[#c9a84c]/60 transition-colors"
-              />
-              <button className="border border-[#c9a84c] text-[#c9a84c] text-[9px] tracking-[0.3em] uppercase px-4 py-2 hover:bg-[#c9a84c] hover:text-white transition-all duration-300 font-medium">
-                Ok
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[9px] tracking-[0.4em] uppercase text-[#c9a84c] mb-5 font-medium">Navigation</p>
-            <ul className="space-y-3">
-              {[
-                { label: "Collection Homme", href: "/montres/homme" },
-                { label: "Collection Femme", href: "/montres/femme" },
-                { label: "Promotions", href: "/promotions" },
-                { label: "Toutes les Collections", href: "/collections" },
-              ].map(link => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-xs text-foreground/55 hover:text-[#c9a84c] transition-colors tracking-wider">
-                    {link.label}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
 
-          <div>
-            <p className="text-[9px] tracking-[0.4em] uppercase text-[#c9a84c] mb-5 font-medium">Contact</p>
-            <ul className="space-y-3 text-xs text-foreground/55">
-              <li>contact@yswatchs.ma</li>
-              <li>+212 6 00 00 00 00</li>
-              <li>Casablanca, Maroc</li>
-            </ul>
+          <div className="text-center mt-12">
+            <Link href="/montres/homme">
+              <button className="btn-victorian">Voir toute la collection</button>
+            </Link>
           </div>
         </div>
+      </section>
 
-        <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[9px] tracking-[0.3em] uppercase text-foreground/35">
-            © 2025 YsWatchs. Tous droits réservés.
+      {/* ═══ QUOTE BANNER ════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 px-6 relative overflow-hidden"
+        style={{ background: '#0A0806', borderTop: '1px solid rgba(201,168,76,0.12)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 60%)',
+        }} />
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden lg:block">
+          <GearSvg size={180} className="gear-spin-slow" />
+        </div>
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block">
+          <GearSvg size={110} className="gear-spin" />
+        </div>
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="max-w-3xl mx-auto text-center relative z-10">
+          <p className="label-victorian mb-6">✦ &nbsp; Notre Philosophie &nbsp; ✦</p>
+          <blockquote style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+            fontWeight: 300,
+            fontStyle: 'italic',
+            lineHeight: 1.45,
+            letterSpacing: '0.02em',
+            color: 'rgba(245,240,232,0.85)',
+            marginBottom: '2rem',
+          }}>
+            "Le temps est la seule richesse que l'on ne peut acquérir.<br/>
+            On peut seulement choisir comment le porter."
+          </blockquote>
+          <div className="ornament-divider max-w-[200px] mx-auto mb-4">◆</div>
+          <p className="label-victorian" style={{ color: 'rgba(201,168,76,0.4)', fontSize: '0.55rem' }}>
+            — Maison YsWatchs, Maroc
           </p>
-          <p className="text-[9px] tracking-[0.3em] uppercase text-foreground/35">
-            Fait avec passion · Maroc
-          </p>
+        </motion.div>
+      </section>
+
+      {/* ═══ PROMOS ══════════════════════════════════════════ */}
+      {promoProducts.length > 0 && (
+        <section className="py-24 sm:py-28 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-center mb-14">
+              <p className="label-victorian mb-4">✦ &nbsp; Offres Exceptionnelles &nbsp; ✦</p>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 300, letterSpacing: '0.04em' }}>
+                Promotions <em className="gold-text" style={{ fontStyle: 'italic' }}>du Moment</em>
+              </h2>
+            </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+              {promoProducts.map(p => {
+                const disc = getDiscountedPrice(p.price, p.discount!);
+                return (
+                  <Link key={p.id} href={`/produit/${p.id}`}>
+                    <div className="card-victorian cursor-pointer overflow-hidden group flex gap-4 p-5 items-center">
+                      <div className="watch-display flex-shrink-0 flex items-center justify-center p-2" style={{ width: '80px', height: '80px' }}>
+                        <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain"
+                          style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="promo-badge text-[7px] tracking-[0.2em] uppercase px-2 py-0.5 font-medium inline-block mb-1.5"
+                          style={{ background: '#C9A84C', color: '#0C0A08' }}>-{p.discount}%</span>
+                        <h4 className="group-hover:text-[#C9A84C] transition-colors truncate mb-1.5"
+                          style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: '1.05rem' }}>
+                          {p.name}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="gold-text" style={{ fontSize: '0.9rem' }}>{formatPrice(disc)}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'rgba(245,240,232,0.22)', textDecoration: 'line-through' }}>
+                            {formatPrice(p.price)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="text-center mt-10">
+              <Link href="/promotions">
+                <button className="btn-victorian" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <FiTag style={{ fontSize: '0.7rem' }} /> Toutes les promotions
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══ FOOTER ══════════════════════════════════════════ */}
+      <footer className="py-16 px-6 relative" style={{ borderTop: '1px solid rgba(201,168,76,0.15)' }}>
+        <div className="h-[2px] absolute top-0 left-0 right-0"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.4), transparent)' }} />
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+            {[
+              { title: 'Maison', links: ['Notre histoire', 'Savoir-faire', 'Certifications', 'Presse'] },
+              { title: 'Service', links: ['Guide des tailles', 'Entretien', 'Garantie', 'Retours'] },
+            ].map(col => (
+              <div key={col.title}>
+                <p className="label-victorian mb-4">{col.title}</p>
+                <ul className="space-y-2.5">
+                  {col.links.map(t => (
+                    <li key={t}><span style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.38)', letterSpacing: '0.07em', cursor: 'pointer' }}
+                      className="hover:text-[#C9A84C] transition-colors">{t}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <p className="label-victorian mb-4">Contact</p>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.38)', lineHeight: 2, letterSpacing: '0.05em' }}>
+                Casablanca, Maroc<br/>+212 6 00 00 00 00<br/>contact@yswatchs.ma
+              </p>
+            </div>
+          </div>
+          <div className="ornament-divider">◆</div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+            <p style={{ fontSize: '0.55rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(245,240,232,0.18)' }}>
+              © 2024 Maison YsWatchs — Tous droits réservés
+            </p>
+            <p className="label-victorian" style={{ fontSize: '0.5rem' }}>L'Art du Temps · Maroc</p>
+          </div>
         </div>
       </footer>
     </div>
