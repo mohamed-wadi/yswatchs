@@ -18,16 +18,17 @@ export default function MarqueeStrip() {
   const repeated = [...items, ...items, ...items, ...items];
 
   return (
-    <div className="overflow-hidden py-3" style={{ background: '#0A0806' }}>
+    <div className="overflow-hidden py-3" style={{ background: 'var(--ys-marquee-bg)', transition: 'background 0.45s' }}>
       <div className="marquee-track flex items-center whitespace-nowrap gap-0">
         {repeated.map((item, i) => (
           <span key={i} style={{
             fontSize: item === '✦' ? '0.55rem' : '0.6rem',
             letterSpacing: item === '✦' ? '0' : '0.35em',
             textTransform: 'uppercase',
-            color: item === '✦' ? 'rgba(201,168,76,0.5)' : 'rgba(245,240,232,0.25)',
+            color: item === '✦' ? 'var(--ys-gold)' : 'var(--ys-text-muted)',
             fontFamily: "'Jost', sans-serif",
             padding: item === '✦' ? '0 1.5rem' : '0 0.75rem',
+            opacity: item === '✦' ? 0.5 : 0.5,
           }}>
             {item}
           </span>
