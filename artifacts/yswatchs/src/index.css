@@ -27,8 +27,8 @@
   --ys-surface-2:    #1C160C;
   --ys-surface-3:    #241D11;
   --ys-text:         #F5F0E8;
-  --ys-text-muted:   rgba(245,240,232,0.45);
-  --ys-text-dim:     rgba(245,240,232,0.22);
+  --ys-text-muted:   rgba(245,240,232,0.78);
+  --ys-text-dim:     rgba(245,240,232,0.52);
   --ys-gold:         #C9A84C;
   --ys-gold-light:   #E2C87A;
   --ys-gold-dim:     rgba(201,168,76,0.18);
@@ -55,8 +55,8 @@
   --ys-surface-2:    #E2D6B8;
   --ys-surface-3:    #D8CAAA;
   --ys-text:         #1A1208;
-  --ys-text-muted:   rgba(26,18,8,0.55);
-  --ys-text-dim:     rgba(26,18,8,0.3);
+  --ys-text-muted:   rgba(26,18,8,0.82);
+  --ys-text-dim:     rgba(26,18,8,0.60);
   --ys-gold:         #A8721C;
   --ys-gold-light:   #C9902E;
   --ys-gold-dim:     rgba(168,114,28,0.2);
@@ -200,12 +200,11 @@ h1, h2, h3, h4 {
 /* ─── Victorian label ────────────────────────────────── */
 .label-victorian {
   font-family: 'Jost', sans-serif;
-  font-weight: 400;
-  font-size: 0.6rem;
-  letter-spacing: 0.5em;
+  font-weight: 500;
+  font-size: 0.65rem;
+  letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--ys-gold);
-  opacity: 0.75;
 }
 
 /* ─── VR gold rule ───────────────────────────────────── */
@@ -266,13 +265,13 @@ h1, h2, h3, h4 {
 /* ─── Input label ────────────────────────────────────── */
 .input-label-ys {
   display: block;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: var(--ys-gold);
-  opacity: 0.65;
   margin-bottom: 0.5rem;
   font-family: 'Jost', sans-serif;
+  font-weight: 500;
 }
 
 /* ─── Input ──────────────────────────────────────────── */

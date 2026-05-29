@@ -224,7 +224,7 @@ export default function ProductPage() {
 
               <div className="vr-gold mb-7" />
 
-              <p style={{ color: "var(--ys-text-muted)", lineHeight: 1.85, fontSize: "0.85rem", letterSpacing: "0.04em", marginBottom: "2rem", fontFamily: "'EB Garamond', Georgia, serif", fontStyle: "italic" }}>
+              <p style={{ color: "var(--ys-text)", lineHeight: 1.9, fontSize: "0.9rem", letterSpacing: "0.03em", marginBottom: "2rem", fontFamily: "'EB Garamond', Georgia, serif" }}>
                 {product.description}
               </p>
 
@@ -238,10 +238,10 @@ export default function ProductPage() {
                   { label: "Étanchéité", value: "50 mètres" },
                 ].map((spec) => (
                   <div key={spec.label}>
-                    <p style={{ fontSize: "0.55rem", letterSpacing: "0.4em", textTransform: "uppercase", color: "var(--ys-gold)", opacity: 0.55, marginBottom: "4px", fontFamily: "'Jost', sans-serif" }}>
+                    <p style={{ fontSize: "0.65rem", letterSpacing: "0.35em", textTransform: "uppercase", color: "var(--ys-gold)", marginBottom: "5px", fontFamily: "'Jost', sans-serif", fontWeight: 500 }}>
                       {spec.label}
                     </p>
-                    <p style={{ fontSize: "0.8rem", color: "var(--ys-text)", letterSpacing: "0.06em" }}>
+                    <p style={{ fontSize: "0.85rem", color: "var(--ys-text)", letterSpacing: "0.04em", fontWeight: 400 }}>
                       {spec.value}
                     </p>
                   </div>

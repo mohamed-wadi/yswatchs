@@ -276,7 +276,7 @@ export default function HomePage() {
             On peut seulement choisir comment le porter."
           </blockquote>
           <div className="ornament-divider max-w-[200px] mx-auto mb-4">◆</div>
-          <p className="label-victorian" style={{ color: 'var(--ys-gold)', opacity: 0.4, fontSize: '0.55rem' }}>
+          <p className="label-victorian" style={{ fontSize: '0.65rem' }}>
             — Maison YsWatchs, Maroc
           </p>
         </motion.div>
