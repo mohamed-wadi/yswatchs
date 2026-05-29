@@ -12,19 +12,23 @@ export default function LoginPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => { if (step === "2fa") otpRefs.current[0]?.focus(); }, [step]);
+  useEffect(() => {
+    if (step === "2fa") otpRefs.current[0]?.focus();
+  }, [step]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     const res = await login(email, password);
-    if (!res.success) setError(res.error ?? "Erreur");
+    if (!res.success) setError(res.error ?? "Erreur de connexion.");
     setLoading(false);
   };
 
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d?$/.test(v)) return;
-    const next = [...otp]; next[i] = v;
+    const next = [...otp];
+    next[i] = v;
     setOtp(next);
     if (v && i < 5) otpRefs.current[i + 1]?.focus();
     if (next.every((d) => d)) submitOtp(next.join(""));
@@ -35,9 +39,14 @@ export default function LoginPage() {
   };
 
   const submitOtp = async (code: string) => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     const res = await verify2FA(code);
-    if (!res.success) { setError(res.error ?? "Erreur"); setOtp(["","","","","",""]); otpRefs.current[0]?.focus(); }
+    if (!res.success) {
+      setError(res.error ?? "Code invalide.");
+      setOtp(["", "", "", "", "", ""]);
+      otpRefs.current[0]?.focus();
+    }
     setLoading(false);
   };
 
@@ -49,7 +58,9 @@ export default function LoginPage() {
           <div style={{ width: 52, height: 52, background: "var(--accent)", borderRadius: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: "0.875rem", boxShadow: "0 8px 24px rgba(99,102,241,0.35)" }}>
             <Watch size={24} color="white" />
           </div>
-          <h1 style={{ fontSize: "1.375rem", fontWeight: 700, letterSpacing: "-0.025em", marginBottom: "0.25rem" }}>YsWatchs Admin</h1>
+          <h1 style={{ fontSize: "1.375rem", fontWeight: 700, letterSpacing: "-0.025em", marginBottom: "0.25rem" }}>
+            YsWatchs — Administration
+          </h1>
           <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
             {step === "2fa" ? "Vérification en deux étapes" : "Connectez-vous à votre espace admin"}
           </p>
@@ -61,8 +72,12 @@ export default function LoginPage() {
               <div className="form-group">
                 <label className="form-label">Adresse e-mail</label>
                 <input
-                  type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@yswatchs.com" required autoFocus
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@yswatchs.com"
+                  required
+                  autoFocus
                 />
               </div>
 
@@ -70,13 +85,18 @@ export default function LoginPage() {
                 <label className="form-label">Mot de passe</label>
                 <div style={{ position: "relative" }}>
                   <input
-                    type={showPw ? "text" : "password"} value={password}
+                    type={showPw ? "text" : "password"}
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••" required
+                    placeholder="••••••••••••"
+                    required
                     style={{ paddingRight: "2.5rem" }}
                   />
-                  <button type="button" onClick={() => setShowPw(!showPw)}
-                    style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex" }}
+                  >
                     {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
@@ -89,7 +109,7 @@ export default function LoginPage() {
               )}
 
               <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "0.625rem" }} disabled={loading}>
-                {loading ? "Connexion…" : <><span>Se connecter</span><ArrowRight size={14} /></>}
+                {loading ? "Connexion en cours…" : <><span>Se connecter</span><ArrowRight size={14} /></>}
               </button>
             </form>
           )}
@@ -100,8 +120,9 @@ export default function LoginPage() {
                 <div style={{ width: 44, height: 44, background: "var(--accent-light)", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: "0.75rem" }}>
                   <Shield size={20} color="var(--accent)" />
                 </div>
-                <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
-                  Entrez le code à 6 chiffres de votre application d'authentification
+                <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.25rem" }}>Authentification à deux facteurs</p>
+                <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>
+                  Entrez le code à 6 chiffres généré par votre application Google Authenticator
                 </p>
               </div>
 
@@ -110,7 +131,10 @@ export default function LoginPage() {
                   <input
                     key={i}
                     ref={(el) => { otpRefs.current[i] = el; }}
-                    type="text" inputMode="numeric" maxLength={1} value={d}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={d}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKey(i, e)}
                     style={{
@@ -129,17 +153,17 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {loading && <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.875rem" }}>Vérification…</p>}
-
-              <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--dim)" }}>
-                Démo: code <strong>123456</strong>
-              </p>
+              {loading && (
+                <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.875rem" }}>
+                  Vérification en cours…
+                </p>
+              )}
             </div>
           )}
         </div>
 
         <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--dim)", marginTop: "1.25rem" }}>
-          YsWatchs © {new Date().getFullYear()} — Panneau d'administration
+          YsWatchs © {new Date().getFullYear()} — Panneau d'administration sécurisé
         </p>
       </div>
     </div>
