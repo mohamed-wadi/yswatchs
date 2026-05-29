@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiFilter, FiX, FiChevronDown, FiChevronUp, FiTag } from "react-icons/fi";
+import { FiFilter, FiX, FiChevronDown, FiChevronUp, FiTag, FiHeart } from "react-icons/fi";
 import { products, formatPrice, getDiscountedPrice, type Category, type Movement, type CaseMaterial, type StrapType, type CaseSize } from "@/lib/data";
+import { useWishlist } from "@/hooks/use-wishlist";
 import Navbar from "@/components/layout/navbar";
 
 type Filters = {
@@ -218,6 +219,7 @@ export default function CataloguePage() {
   const genre = params?.genre as Category | undefined;
   const [filters, setFilters] = useState<Filters>({ movement: [], caseMaterial: [], strapType: [], caseSize: [] });
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   const catProducts = genre ? products.filter(p => p.category === genre) : products.filter(p => p.category === 'homme' || p.category === 'femme');
 
@@ -394,9 +396,23 @@ export default function CataloguePage() {
                 const disc = product.discount ? getDiscountedPrice(product.price, product.discount) : null;
                 return (
                   <motion.div key={product.id} variants={fadeUp}>
-                    <Link href={`/produit/${product.id}`}>
-                      <div className="card-victorian cursor-pointer overflow-hidden group h-full flex flex-col">
-                        <div className="watch-display aspect-square flex items-center justify-center p-7 sm:p-9 relative">
+                    <div className="card-victorian overflow-hidden group h-full flex flex-col relative">
+                      {/* Wishlist heart */}
+                      <button
+                        onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
+                        className="absolute top-3 right-3 z-10 flex items-center justify-center transition-all duration-250"
+                        style={{
+                          width: '30px', height: '30px',
+                          background: isWishlisted(product.id) ? 'var(--ys-gold-dim)' : 'var(--ys-surface)',
+                          border: `1px solid ${isWishlisted(product.id) ? 'var(--ys-gold)' : 'var(--ys-border)'}`,
+                          color: isWishlisted(product.id) ? 'var(--ys-gold)' : 'var(--ys-text-dim)',
+                        }}
+                        title={isWishlisted(product.id) ? 'Retirer de la liste' : 'Ajouter à la liste de souhaits'}
+                      >
+                        <FiHeart style={{ fontSize: '0.75rem', fill: isWishlisted(product.id) ? 'var(--ys-gold)' : 'none' }} />
+                      </button>
+                      <Link href={`/produit/${product.id}`} className="flex flex-col h-full">
+                        <div className="watch-display aspect-square flex items-center justify-center p-7 sm:p-9 relative cursor-pointer">
                           <img src={product.images[0]} alt={product.name}
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                             style={{ maxHeight: '100%', maxWidth: '100%', filter: 'var(--ys-img-filter)' }} />
@@ -437,8 +453,8 @@ export default function CataloguePage() {
                             )}
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </div>
                   </motion.div>
                 );
               })}

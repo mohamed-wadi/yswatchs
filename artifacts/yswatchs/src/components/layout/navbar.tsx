@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiShoppingCart, FiSearch, FiMenu, FiX, FiTag } from "react-icons/fi";
+import { FiShoppingCart, FiSearch, FiMenu, FiX, FiTag, FiHeart } from "react-icons/fi";
 import { useCart } from "@/hooks/use-cart";
 import { useTheme } from "@/hooks/use-theme";
+import { useWishlist } from "@/hooks/use-wishlist";
 import logoPath from "@assets/LOGO_YS_1778428531681.png";
 
 function ThemeToggle() {
@@ -16,7 +17,6 @@ function ThemeToggle() {
       title={theme === "dark" ? "Mode clair" : "Mode sombre"}
     >
       <span className="theme-toggle-thumb" />
-      {/* Sun icon - visible in dark mode */}
       <span style={{
         position: 'absolute', right: '4px',
         fontSize: '8px', lineHeight: 1,
@@ -24,7 +24,6 @@ function ThemeToggle() {
         transition: 'opacity 0.3s',
         opacity: theme === 'dark' ? 1 : 0,
       }}>☀</span>
-      {/* Moon icon - visible in light mode */}
       <span style={{
         position: 'absolute', left: '4px',
         fontSize: '8px', lineHeight: 1,
@@ -41,6 +40,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { totalItems } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -73,7 +73,6 @@ export default function Navbar() {
           boxShadow: isScrolled ? '0 2px 40px rgba(0,0,0,0.2)' : 'none',
         }}
       >
-        {/* Filigree line on scroll */}
         {isScrolled && (
           <div className="absolute top-0 left-0 right-0 h-[2px]"
             style={{ background: `linear-gradient(to right, transparent, var(--ys-gold) 20%, var(--ys-gold-light, #E2C87A) 50%, var(--ys-gold) 80%, transparent)` }} />
@@ -125,12 +124,27 @@ export default function Navbar() {
           </div>
 
           {/* Right */}
-          <div className="flex items-center justify-end gap-4 w-1/3">
+          <div className="flex items-center justify-end gap-3 sm:gap-4 w-1/3">
             <ThemeToggle />
             <Link href="/recherche" className="hover:text-[var(--ys-gold)] transition-colors"
               style={{ color: 'var(--ys-text-muted)' }} aria-label="Recherche">
               <FiSearch className="text-lg" />
             </Link>
+            {/* Wishlist */}
+            <Link href="/wishlist" className="hover:text-[var(--ys-gold)] transition-colors relative"
+              style={{ color: location === '/wishlist' ? 'var(--ys-gold)' : 'var(--ys-text-muted)' }} aria-label="Liste de souhaits">
+              <FiHeart className="text-lg" />
+              <AnimatePresence>
+                {wishlistCount > 0 && (
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                    className="absolute -top-2 -right-2 text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--ys-gold)', color: 'var(--ys-bg)' }}>
+                    {wishlistCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+            {/* Cart */}
             <Link href="/panier" className="hover:text-[var(--ys-gold)] transition-colors relative"
               style={{ color: 'var(--ys-text-muted)' }} aria-label="Panier">
               <FiShoppingCart className="text-lg" />
@@ -181,8 +195,9 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col justify-center flex-1 px-8 gap-1">
               {[...navLinks,
+                { label: "Liste de Souhaits", href: "/wishlist" },
                 { label: "Recherche", href: "/recherche" },
-                { label: "Panier", href: "/panier" }
+                { label: "Panier", href: "/panier" },
               ].map((link, i) => (
                 <motion.div key={link.href}
                   initial={{ opacity: 0, x: -24 }}

@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { motion } from "framer-motion";
-import { FiArrowLeft, FiShoppingCart, FiCheck, FiZoomIn, FiZoomOut, FiTag } from "react-icons/fi";
+import { FiArrowLeft, FiShoppingCart, FiCheck, FiZoomIn, FiZoomOut, FiTag, FiHeart } from "react-icons/fi";
 import { getProductById, products, formatPrice, getDiscountedPrice } from "@/lib/data";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 import Navbar from "@/components/layout/navbar";
 
 const matLabels: Record<string, string> = {
@@ -17,6 +18,7 @@ export default function ProductPage() {
   const [, params] = useRoute("/produit/:id");
   const product = getProductById(params?.id || "");
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [selectedImage, setSelectedImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -292,6 +294,23 @@ export default function ProductPage() {
                   }}
                 >
                   {added ? <><FiCheck /> Ajouté au panier</> : <><FiShoppingCart /> {product.inStock ? "Ajouter au panier" : "Rupture de stock"}</>}
+                </button>
+
+                {/* Wishlist button */}
+                <button
+                  onClick={() => toggleWishlist(product)}
+                  title={isWishlisted(product.id) ? "Retirer de la liste de souhaits" : "Ajouter à la liste de souhaits"}
+                  className="flex items-center justify-center transition-all duration-300"
+                  style={{
+                    padding: "0.9rem",
+                    border: `1px solid ${isWishlisted(product.id) ? "var(--ys-gold)" : "var(--ys-border)"}`,
+                    background: isWishlisted(product.id) ? "var(--ys-gold-dim)" : "transparent",
+                    color: isWishlisted(product.id) ? "var(--ys-gold)" : "var(--ys-text-muted)",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  <FiHeart style={{ fontSize: "1.1rem", fill: isWishlisted(product.id) ? "var(--ys-gold)" : "none" }} />
                 </button>
               </div>
 

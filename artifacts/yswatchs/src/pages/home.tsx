@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { Link } from "wouter";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { FiArrowRight, FiTag } from "react-icons/fi";
+import { FiArrowRight, FiTag, FiHeart } from "react-icons/fi";
 import { products, formatPrice, getDiscountedPrice, getDiscountedProducts } from "@/lib/data";
+import { useWishlist } from "@/hooks/use-wishlist";
 import Navbar from "@/components/layout/navbar";
 import MarqueeStrip from "@/components/MarqueeStrip";
 import VictorianClock from "@/components/VictorianClock";
@@ -34,6 +35,7 @@ export default function HomePage() {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "28%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   const featured = products.slice(0, 3);
   const promoProducts = getDiscountedProducts().slice(0, 2);
@@ -187,8 +189,22 @@ export default function HomePage() {
               const disc = product.discount ? getDiscountedPrice(product.price, product.discount) : null;
               return (
                 <motion.div key={product.id} variants={fadeUp}>
-                  <Link href={`/produit/${product.id}`}>
-                    <div className="card-victorian cursor-pointer overflow-hidden group">
+                  <div className="card-victorian overflow-hidden group relative">
+                    {/* Wishlist heart */}
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
+                      className="absolute top-3 right-3 z-10 flex items-center justify-center transition-all duration-250"
+                      style={{
+                        width: '30px', height: '30px',
+                        background: isWishlisted(product.id) ? 'var(--ys-gold-dim)' : 'var(--ys-surface)',
+                        border: `1px solid ${isWishlisted(product.id) ? 'var(--ys-gold)' : 'var(--ys-border)'}`,
+                        color: isWishlisted(product.id) ? 'var(--ys-gold)' : 'var(--ys-text-dim)',
+                      }}
+                      title={isWishlisted(product.id) ? 'Retirer de la liste' : 'Ajouter à la liste de souhaits'}
+                    >
+                      <FiHeart style={{ fontSize: '0.75rem', fill: isWishlisted(product.id) ? 'var(--ys-gold)' : 'none' }} />
+                    </button>
+                    <Link href={`/produit/${product.id}`} className="cursor-pointer block">
                       <div className="watch-display aspect-square flex items-center justify-center p-8 sm:p-10 relative">
                         <img src={product.images[0]} alt={product.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
@@ -231,8 +247,8 @@ export default function HomePage() {
                             className="group-hover:text-[var(--ys-gold)] transition-colors" />
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
                 </motion.div>
               );
             })}
